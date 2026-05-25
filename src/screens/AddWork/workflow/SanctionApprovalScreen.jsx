@@ -9,33 +9,33 @@
 //   + Real upsertSanction wired to useSaveAndContinue (stub removed)
 //   + Validation for required fields
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import ScreenLayout     from '../../../components/layouts/Screenlayout';
+import Inputboxfield from '../../../components/Inputboxfield';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
-import ProgressSlot     from '../../../components/layouts/Progressslot';
-import Inputboxfield    from '../../../components/Inputboxfield';
-import CalendarPicker   from '../../../components/CalendarPicker';
+import NativeDateField from '../../../components/NativeDateField';
+import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
-import PrimaryButton    from '../../../components/PrimaryButton';
 
-import useDraftStore      from '../../../store/useDraftStore';
-import useWorkStore       from '../../../store/useWorkStore';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
 
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-  upsertSanction,
-  getSanctionByWorkId,
-  mapSanctionRowToForm,
+    getSanctionByWorkId,
+    mapSanctionRowToForm,
+    upsertSanction,
 } from '../../../db/repositories/sanctionsRepository';
-import { formatDateForStorage } from '../../../utils/dateFormat';
-import { WORKFLOW_ROUTES, TOTAL_WORKFLOW_STEPS } from '../../../constants/WorkflowSteps';
 import theme from '../../../theme';
+import { formatDateForStorage } from '../../../utils/dateFormat';
 
 // ─── Initial form state ───────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -45,30 +45,15 @@ const EMPTY_FORM = {
   sanction_letter_path: '',
 };
 
-// ─── Validation ───────────────────────────────────────────────────────────────
-// str() coerces any value to string safely before .trim().
-// Required because Hermes (Android JS engine) can throw when optional chaining
-// is used with .trim() on values that are non-string at runtime (e.g. undefined
-// coming from CalendarPicker before a date is picked).
-const str = (v) => (v == null ? '' : String(v));
-
-const validate = (form) => {
-  const errors = {};
-  if (!str(form.docket_number).trim())   errors.docket_number   = 'Docket number is required';
-  if (!str(form.sanction_amount).trim()) errors.sanction_amount = 'Sanction amount is required';
-  if (!str(form.sanction_date).trim())   errors.sanction_date   = 'Sanction date is required';
-  return errors;
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 const SanctionApprovalScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.SANCTION_APPROVAL, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId }  = useWorkStore();
 
-  const [form,   setForm]   = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState(EMPTY_FORM);
 
   // ── Hydration: draft → SQLite ─────────────────────────────────────────────
   useEffect(() => {
@@ -102,19 +87,18 @@ const SanctionApprovalScreen = ({ navigation }) => {
 
   // ── Field update ───────────────────────────────────────────────────────────
   const updateField = (key, val) => {
-    const updated = { ...form, [key]: val };
-    setForm(updated);
-    setDraft('sanctionApproval', updated);
-    if (errors[key]) {
-      setErrors((prev) => { const e = { ...prev }; delete e[key]; return e; });
-    }
+    setForm((prev) => {
+      const updated = { ...prev, [key]: val };
+      queueMicrotask(() => setDraft('sanctionApproval', updated));
+      return updated;
+    });
   };
 
   // ── Save & Continue ────────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'sanctionApproval',
     (workId, data) => upsertSanction(workId, data),
-    WORKFLOW_ROUTES.PAYMENT_STATUS,
+    WORKFLOW_ROUTES.WORK_ORDER,
     WORKFLOW_ROUTES.SANCTION_APPROVAL,
   );
 
@@ -126,12 +110,6 @@ const SanctionApprovalScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -168,8 +146,6 @@ const SanctionApprovalScreen = ({ navigation }) => {
           placeholder="DKT 005-2035"
           value={form.docket_number}
           onChangeText={(v) => updateField('docket_number', v)}
-          error={errors.docket_number}
-          required
         />
 
         {/* Sanction Amount — numeric, ₹ prefix */}
@@ -179,18 +155,13 @@ const SanctionApprovalScreen = ({ navigation }) => {
           value={form.sanction_amount}
           onChangeText={(v) => updateField('sanction_amount', v)}
           keyboardType="decimal-pad"
-          error={errors.sanction_amount}
-          required
         />
 
-        {/* Sanction Date — inline CalendarPicker, no modal */}
-        <CalendarPicker
+        <NativeDateField
           label="Sanction date"
           placeholder="dd/mm/yy"
           value={form.sanction_date}
           onDateChange={(v) => updateField('sanction_date', formatDateForStorage(v))}
-          error={errors.sanction_date}
-          required
         />
 
         {/* ── Documents section ────────────────────────────────────────── */}

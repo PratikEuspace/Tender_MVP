@@ -1,101 +1,135 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
+
 const PRIMARY = '#062E52';
-const USED_FILL = '#1A75BF';
-const TRACK = '#E5E7EB';
+const GRADIENT_END = '#0D67B8';
+const LEGEND_USED = '#0D67B8';
+const LEGEND_SANCTIONED = 'rgba(0, 0, 0, 0.14)';
+const TRACK_BG = 'rgba(0, 0, 0, 0.14)';
+
+const BAR_HEIGHT = 15;
+const BAR_RADIUS = 40;
+const CARD_RADIUS = 15;
 
 const LegendDot = ({ color }) => (
   <View style={[styles.legendDot, { backgroundColor: color }]} />
 );
 
-const ReportBudgetCard = ({ style }) => (
-  <View style={[styles.card, style]}>
-    <View style={styles.headerRow}>
-      <View style={styles.headerText}>
-        <Text style={styles.title}>Budget</Text>
-        <Text style={styles.subtitle}>
-          How much of each department&apos;s budget has been spent
-        </Text>
-      </View>
-      <Text style={styles.unitLabel}>₹ in Lakhs</Text>
-    </View>
+const ReportBudgetCard = ({
+  barPrimaryLabel = '₹0 of ₹0',
+  barRemainingLabel = '₹0 remaining',
+  totalBudgetDetail = '→ ₹0',
+  totalUsedDetail = '→ ₹0 (0%)',
+  progressPercent = 0,
+  style,
+}) => {
+  const clamped = Math.min(100, Math.max(0, progressPercent));
+  const fillWidth = `${clamped}%`;
 
-    <View style={styles.legendRow}>
-      <View style={styles.legendItem}>
-        <LegendDot color={USED_FILL} />
-        <Text style={styles.legendText}>Used so far</Text>
+  return (
+    <View style={[styles.card, style]}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>Budget</Text>
+          <Text style={styles.subtitle}>
+            How much of each department&apos;s budget has been spent
+          </Text>
+        </View>
+        <Text style={styles.unitLabel}>₹ in Lakhs</Text>
       </View>
-      <View style={styles.legendItem}>
-        <LegendDot color={TRACK} />
-        <Text style={styles.legendText}>Sanctioned</Text>
-      </View>
-    </View>
 
-    <View style={styles.barLabelsRow}>
-      <Text style={styles.barLabelPrimary}>₹9L of ₹20L</Text>
-      <Text style={styles.barLabelMuted}>₹11L remaining</Text>
-    </View>
-
-    <View style={styles.track}>
-      <View style={[styles.fill, { width: '45%' }]} />
-    </View>
-
-    <View style={styles.detailsBlock}>
-      <View style={styles.detailRow}>
-        <Text style={styles.detailLabel}>Total budget</Text>
-        <Text style={styles.detailValue}>→ ₹160 Lakhs</Text>
+      <View style={styles.legendRow}>
+        <View style={styles.legendItem}>
+          <LegendDot color={LEGEND_USED} />
+          <Text style={styles.legendText}>Used so far</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <LegendDot color={LEGEND_SANCTIONED} />
+          <Text style={styles.legendText}>Sanctioned</Text>
+        </View>
       </View>
-      <View style={styles.detailRow}>
-        <Text style={styles.detailLabel}>Total used</Text>
-        <Text style={styles.detailValue}>→ ₹112 Lakhs (70%)</Text>
+
+      <View style={styles.progressBlock}>
+        <Text style={styles.barLabelPrimary}>{barPrimaryLabel}</Text>
+
+        <View style={styles.track}>
+          {clamped > 0 ? (
+            <View style={[styles.fillClip, { width: fillWidth }]}>
+              <LinearGradient
+                colors={[PRIMARY, GRADIENT_END]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.fillGradient}
+              />
+            </View>
+          ) : null}
+        </View>
+
+        <Text style={styles.barLabelRemaining}>{barRemainingLabel}</Text>
+      </View>
+
+      <View style={styles.detailsBlock}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Total budget</Text>
+          <Text style={styles.detailValue}>{totalBudgetDetail}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Total used</Text>
+          <Text style={styles.detailValue}>{totalUsedDetail}</Text>
+        </View>
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    borderRadius: CARD_RADIUS,
+    ...dashboardCardSurfaceStyle,
+    paddingTop: 16,
+    paddingBottom: 14,
+    paddingHorizontal: 16,
     marginBottom: 20,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   headerText: {
     flex: 1,
-    paddingRight: 8,
+    paddingRight: 10,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    lineHeight: 20,
+    marginBottom: 3,
   },
   subtitle: {
     fontSize: 12,
     fontWeight: '400',
     color: '#6B7280',
-    lineHeight: 17,
+    lineHeight: 16,
   },
   unitLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: PRIMARY,
+    lineHeight: 16,
+    paddingTop: 2,
   },
   legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 16,
+    marginBottom: 10,
+    gap: 18,
   },
   legendItem: {
     flexDirection: 'row',
@@ -111,40 +145,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#4B5563',
+    lineHeight: 16,
   },
-  barLabelsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  progressBlock: {
+    marginBottom: 12,
   },
   barLabelPrimary: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#111827',
+    color: '#8B2513',
+    textAlign: 'right',
+    lineHeight: 18,
+    marginBottom: 6,
   },
-  barLabelMuted: {
+  track: {
+    width: '100%',
+    height: BAR_HEIGHT,
+    borderRadius: BAR_RADIUS,
+    backgroundColor: TRACK_BG,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
+  fillClip: {
+    height: BAR_HEIGHT,
+    borderRadius: BAR_RADIUS,
+    overflow: 'hidden',
+    minWidth: 0,
+  },
+  fillGradient: {
+    flex: 1,
+    height: BAR_HEIGHT,
+    borderRadius: BAR_RADIUS,
+  },
+  barLabelRemaining: {
     fontSize: 12,
     fontWeight: '500',
     color: '#6B7280',
-  },
-  track: {
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: TRACK,
-    overflow: 'hidden',
-    marginBottom: 14,
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 5,
-    backgroundColor: USED_FILL,
+    textAlign: 'right',
+    lineHeight: 16,
+    marginTop: 6,
   },
   detailsBlock: {
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: '#E5E7EB',
     paddingTop: 12,
-    gap: 8,
+    gap: 10,
   },
   detailRow: {
     flexDirection: 'row',
@@ -154,12 +199,17 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#374151',
+    color: '#6B7280',
+    lineHeight: 18,
   },
   detailValue: {
     fontSize: 13,
     fontWeight: '600',
     color: PRIMARY,
+    lineHeight: 18,
+    textAlign: 'right',
+    flexShrink: 1,
+    marginLeft: 12,
   },
 });
 

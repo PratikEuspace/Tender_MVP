@@ -1,14 +1,15 @@
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
+import BudgetUtilisationCard from '../../components/dashboard/BudgetUtilisationCard';
+import { dashboardSectionLabelStyle } from '../../components/dashboard/dashboardTypography';
+import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
+import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
+import RecentWorkCard from '../../components/dashboard/RecentWorkCard';
+import SearchBar from '../../components/dashboard/SearchBar';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
-import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
-import SearchBar from '../../components/dashboard/SearchBar';
-import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
-import BudgetUtilisationCard from '../../components/dashboard/BudgetUtilisationCard';
-import RecentWorkCard from '../../components/dashboard/RecentWorkCard';
 import { workCompletedToChipStatus } from '../../components/Statuschip';
 import { getTotalAmountPaidAll } from '../../db/repositories/paymentsRepository';
 import useWorkStore from '../../store/useWorkStore';
@@ -111,7 +112,7 @@ const DashboardScreen = () => {
             value={String(dashboardStats.total)}
             percent={dashboardStats.totalPercent}
             ringColor="#9CA3AF"
-            trackColor="#E5E7EB"
+            trackColor="#D9EDE2"
           />
           <View style={styles.statsGap} />
           <DashboardStatCard
@@ -202,9 +203,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    ...dashboardSectionLabelStyle,
   },
   viewAll: {
     fontSize: 13,

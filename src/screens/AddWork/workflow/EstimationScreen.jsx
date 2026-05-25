@@ -1,34 +1,33 @@
 // src/screens/AddWork/workflow/EstimationScreen.jsx
 // Step 3 of 9: Estimation
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import ScreenLayout      from '../../../components/layouts/Screenlayout';
-import WorkflowProgress  from '../../../components/layouts/Workflowprogress';
-import ProgressSlot      from '../../../components/layouts/Progressslot';
+import FormToggleField from '../../../components/FormToggleField';
+import Inputboxfield from '../../../components/Inputboxfield';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
+import WorkflowProgress from '../../../components/layouts/Workflowprogress';
+import NativeDateField from '../../../components/NativeDateField';
+import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
-import FormToggleField from '../../../components/FormToggleField';
-import { formFieldStyles } from '../../../theme/formFieldStyles';
-import Inputboxfield     from '../../../components/Inputboxfield';
-import PrimaryButton     from '../../../components/PrimaryButton';
-import CalendarPicker    from '../../../components/CalendarPicker';
 
-import useDraftStore      from '../../../store/useDraftStore';
-import useWorkStore       from '../../../store/useWorkStore';
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import {
+    getEstimationByWorkId,
+    mapEstimationRowToForm,
+    upsertEstimation,
+} from '../../../db/repositories/estimationsRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
-import {
-  upsertEstimation,
-  getEstimationByWorkId,
-  mapEstimationRowToForm,
-} from '../../../db/repositories/estimationsRepository';
-import { formatDateForStorage } from '../../../utils/dateFormat';
-import { WORKFLOW_ROUTES, TOTAL_WORKFLOW_STEPS } from '../../../constants/WorkflowSteps';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
+import { formatDateForStorage } from '../../../utils/dateFormat';
 
 const EMPTY_FORM = {
   estimate_done:    false,
@@ -38,23 +37,14 @@ const EMPTY_FORM = {
   estimation_file_path: '',
 };
 
-const validate = (form) => {
-  const errors = {};
-  if (form.estimate_done) {
-    if (!form.estimation_date)        errors.estimation_date = 'Estimation date is required';
-    if (!form.estimated_cost?.trim()) errors.estimated_cost = 'Estimated cost is required';
-  }
-  return errors;
-};
-
 const EstimationScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.ESTIMATION, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const hydrate = () => {
@@ -86,13 +76,12 @@ const EstimationScreen = ({ navigation }) => {
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateField = useCallback((key, val) => {
-    const updated = { ...form, [key]: val };
-    setForm(updated);
-    setDraft('estimation', updated);
-    if (errors[key]) {
-      setErrors((prev) => { const e = { ...prev }; delete e[key]; return e; });
-    }
-  }, [form, errors, setDraft]);
+    setForm((prev) => {
+      const updated = { ...prev, [key]: val };
+      queueMicrotask(() => setDraft('estimation', updated));
+      return updated;
+    });
+  }, [setDraft]);
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'estimation',
@@ -120,17 +109,6 @@ const EstimationScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
-    if (!currentWorkId) {
-      Alert.alert('Error', 'Work ID not found. Please restart from Work Details.');
-      return;
-    }
-
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -168,17 +146,12 @@ const EstimationScreen = ({ navigation }) => {
 
         {form.estimate_done && (
           <>
-            <View>
-              <CalendarPicker
-                label="Estimation Date"
-                value={form.estimation_date}
-                onDateChange={(date) => updateField('estimation_date', formatDateForStorage(date))}
-                placeholder="dd/mm/yyyy"
-              />
-              {errors.estimation_date ? (
-                <Text style={formFieldStyles.errorText}>{errors.estimation_date}</Text>
-              ) : null}
-            </View>
+            <NativeDateField
+              label="Estimation Date"
+              value={form.estimation_date}
+              onDateChange={(date) => updateField('estimation_date', formatDateForStorage(date))}
+              placeholder="dd/mm/yyyy"
+            />
 
             <Inputboxfield
               label="Estimated Cost (₹)"
@@ -186,7 +159,6 @@ const EstimationScreen = ({ navigation }) => {
               value={form.estimated_cost}
               onChangeText={(v) => updateField('estimated_cost', v)}
               keyboardType="numeric"
-              error={errors.estimated_cost}
             />
 
             <Inputboxfield

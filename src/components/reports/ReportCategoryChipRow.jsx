@@ -39,8 +39,9 @@ const ReportCategoryChipRow = ({ style }) => {
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingVertical: 4,
+    paddingVertical: 1,
     paddingRight: 4,
+    paddingLeft: 4,
   },
   chip: {
     paddingHorizontal: 14,

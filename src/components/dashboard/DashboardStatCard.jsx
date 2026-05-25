@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { dashboardCardBorderStyle } from './dashboardCardBorder';
+
 const ProgressRing = ({
   percent = 0,
   size = 72,
@@ -117,11 +119,10 @@ const DashboardStatCard = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 132,
+    minHeight: 115,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...dashboardCardBorderStyle,
     paddingVertical: 14,
     paddingHorizontal: 8,
     alignItems: 'center',

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
@@ -12,10 +13,38 @@ import ReportInfoBanner from '../../components/reports/ReportInfoBanner';
 import ReportBudgetCard from '../../components/reports/ReportBudgetCard';
 import ReportExportSection from '../../components/reports/ReportExportSection';
 import ReportShareCard from '../../components/reports/ReportShareCard';
+import {
+  emptyBudgetSummary,
+  getReportsBudgetSummary,
+} from '../../db/repositories/reportsRepository';
 
 const ReportsScreen = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
+  const [budgetSummary, setBudgetSummary] = useState(() => emptyBudgetSummary());
+
+  const loadBudgetSummary = useCallback(() => {
+    try {
+      setBudgetSummary(getReportsBudgetSummary(fy));
+    } catch (error) {
+      console.error('[ReportsScreen] getReportsBudgetSummary failed:', error);
+      setBudgetSummary(emptyBudgetSummary());
+    }
+  }, [fy]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadBudgetSummary();
+    }, [loadBudgetSummary]),
+  );
+
+  useEffect(() => {
+    loadBudgetSummary();
+  }, [loadBudgetSummary]);
+
+  const handleFyChange = useCallback((nextFy) => {
+    setFy(nextFy);
+  }, []);
 
   return (
     <>
@@ -27,7 +56,7 @@ const ReportsScreen = () => {
         onMenuPress={() => setDrawerOpen(true)}
         headerRight={
           <View style={styles.headerRight}>
-            <FinancialYearDropdown value={fy} onChange={setFy} />
+            <FinancialYearDropdown value={fy} onChange={handleFyChange} />
             <NotificationButton
               iconColor={theme.Colors.white ?? '#FFFFFF'}
               iconSize={20}
@@ -40,12 +69,14 @@ const ReportsScreen = () => {
 
         <View style={styles.statsRow}>
           <ReportStatCard
+            variant="total"
             value="34"
             title="Total Works"
             subtitle="+4 from last year"
           />
           <View style={styles.statsGap} />
           <ReportStatCard
+            variant="completed"
             value="12"
             title="Completed"
             subtitle="58% completed rate"
@@ -54,21 +85,29 @@ const ReportsScreen = () => {
 
         <View style={styles.statsRow}>
           <ReportStatCard
+            variant="inProgress"
             value="20"
             title="In Progress"
             subtitle="Target: complete by Aug"
           />
           <View style={styles.statsGap} />
           <ReportStatCard
+            variant="pending"
             value="02"
             title="Pending"
             subtitle="Needs attention"
           />
         </View>
 
-        <ReportInfoBanner />
+        <ReportInfoBanner message={budgetSummary.bannerText} />
 
-        <ReportBudgetCard />
+        <ReportBudgetCard
+          barPrimaryLabel={budgetSummary.barPrimaryLabel}
+          barRemainingLabel={budgetSummary.barRemainingLabel}
+          totalBudgetDetail={budgetSummary.totalBudgetDetail}
+          totalUsedDetail={budgetSummary.totalUsedDetail}
+          progressPercent={budgetSummary.percent}
+        />
 
         <ReportExportSection />
 

@@ -1,39 +1,30 @@
 // src/screens/AddWork/workflow/TenderCreationScreen.jsx
 // Step 4 of 10: Tender Creation
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import ScreenLayout     from '../../../components/layouts/Screenlayout';
+import Inputboxfield from '../../../components/Inputboxfield';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
-import ProgressSlot     from '../../../components/layouts/Progressslot';
-import Inputboxfield    from '../../../components/Inputboxfield';
-import CalendarPicker   from '../../../components/CalendarPicker';   // ← self-contained field
+import NativeDateField from '../../../components/NativeDateField';
+import PrimaryButton from '../../../components/PrimaryButton';
+import StatusToggle from '../../../components/StatusToggle';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
-import StatusToggle     from '../../../components/StatusToggle';
-import PrimaryButton    from '../../../components/PrimaryButton';
 
-import useDraftStore      from '../../../store/useDraftStore';
-import useWorkStore       from '../../../store/useWorkStore';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
 
-import { upsertTender, getTenderByWorkId } from '../../../db/repositories/tendersRepository';
-import { WORKFLOW_ROUTES, TOTAL_WORKFLOW_STEPS } from '../../../constants/WorkflowSteps';
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import { getTenderByWorkId, upsertTender } from '../../../db/repositories/tendersRepository';
 import theme from '../../../theme';
-
-// ─── Helper: Date object → 'DD/MM/YYYY' string ───────────────────────────────
-// CalendarPicker calls onDateChange with a real Date object.
-// We store dates as strings in SQLite and Zustand.
-const toDateString = (date) => {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}/${m}/${y}`;
-};
+import { formatDateForStorage } from '../../../utils/dateFormat';
 
 // ─── Initial form ─────────────────────────────────────────────────────────────
 const EMPTY_FORM = {
@@ -50,19 +41,21 @@ const EMPTY_FORM = {
 const TenderCreationScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.TENDER_CREATION, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId }      = useWorkStore();
 
   const [form, setForm]            = useState(EMPTY_FORM);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // ── Field updater — sequential calls, NOT nested ──────────────────────────
-  // setDraft must NOT be called inside setForm's updater (setState-in-render bug)
   const updateField = useCallback((key, value) => {
-    const updated = { ...form, [key]: value };
-    setForm(updated);
-    setDraft('tenderCreation', updated);
-  }, [form, setDraft]);
+    setForm((prev) => {
+      const updated = { ...prev, [key]: value };
+      queueMicrotask(() => setDraft('tenderCreation', updated));
+      return updated;
+    });
+  }, [setDraft]);
 
   // ── Hydration ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -123,10 +116,6 @@ const TenderCreationScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
-    if (!currentWorkId) {
-      Alert.alert('Error', 'Work ID not found. Please restart from Work Details.');
-      return;
-    }
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -171,19 +160,12 @@ const TenderCreationScreen = ({ navigation }) => {
           onChangeText={(v) => updateField('tender_number', v)}
         />
 
-        {/*
-          CalendarPicker is self-contained: renders its own label + input row
-          + inline calendar dropdown. No Inputboxfield wrapper needed.
-
-          onDateChange receives a Date object → convert to 'DD/MM/YYYY' string.
-          value accepts 'DD/MM/YYYY' string → CalendarPicker normalises it internally.
-        */}
-        <CalendarPicker
-            label="Tender date"
-            placeholder="dd/mm/yy"
-            value={form.tender_date}
-            onDateChange={(date) => updateField('tender_date', toDateString(date))}
-          />
+        <NativeDateField
+          label="Tender date"
+          placeholder="dd/mm/yy"
+          value={form.tender_date}
+          onDateChange={(date) => updateField('tender_date', formatDateForStorage(date))}
+        />
 
         <Inputboxfield
           label="Tender amount (₹)"

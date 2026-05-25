@@ -34,8 +34,11 @@ const SCREEN_STATUS_MAP = {
   reTender:              'warning',
   contractorAssignment:  'warning',
   sanctionApproval:      'warning',
+  workOrder:             'warning',
   workProgress:          'warning',
+  billSubmission:        'warning',
   completionAndClosure:  'warning',
+  completionClosure:     'warning',
 };
 
 // ─── Circle-check icon (pure Views) ──────────────────────────────────────────
@@ -140,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.Radius?.lg ?? 12,          // ✅ was theme.borderRadius?.lg
     paddingVertical: theme.Spacing?.sm ?? 10,       // ✅ was theme.spacing?.sm
     paddingHorizontal: theme.Spacing?.md ?? 14,     // ✅ was theme.spacing?.md
-    marginBottom: theme.Spacing?.md ?? 14,          // ✅ was theme.spacing?.md
+    marginBottom: 3,          // ✅ was theme.spacing?.md
     gap: theme.Spacing?.sm ?? 10,                   // ✅ was theme.spacing?.sm
   },
   iconWrapper: {

@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: FontFamily.bold,
     fontWeight: FontWeight.bold,
-    fontSize:   FontSize.xxl,
+    fontSize:   18,
     color:      Colors.textInverse,
     letterSpacing: 0.2,
   },

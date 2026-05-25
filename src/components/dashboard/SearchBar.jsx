@@ -26,10 +26,10 @@ const styles = StyleSheet.create({
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    height: 40,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "black",
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 14,
   },
@@ -39,7 +39,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1A1A1A',
+    fontWeight: 400,
+    color: '#000000',
     padding: 0,
     margin: 0,
     includeFontPadding: false,

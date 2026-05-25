@@ -6,6 +6,7 @@ import { getContractorByWorkId } from './contractorRepository';
 import { getEstimationByWorkId } from './estimationsRepository';
 import { getTenderByWorkId } from './tendersRepository';
 import { getSanctionByWorkId } from './sanctionsRepository';
+import { getWorkOrderByWorkId } from './workOrdersRepository';
 import { getPaymentByWorkId } from './paymentsRepository';
 import { getCompletionClosureByWorkId } from './completionClosureRepository';
 
@@ -53,6 +54,12 @@ const ensureSanctionRow = (workId) => {
   if (getSanctionByWorkId(workId)) return;
   const db = getDB();
   db.runSync(`INSERT INTO sanctions (work_id) VALUES (?);`, [workId]);
+};
+
+const ensureWorkOrderRow = (workId) => {
+  if (getWorkOrderByWorkId(workId)) return;
+  const db = getDB();
+  db.runSync(`INSERT INTO work_orders (work_id) VALUES (?);`, [workId]);
 };
 
 const ensurePaymentRow = (workId) => {
@@ -122,6 +129,15 @@ export const patchSanctionLetterPath = (workId, filePath) => {
     filePath,
     workId,
   ]);
+};
+
+export const patchWorkOrderDocumentPath = (workId, filePath) => {
+  ensureWorkOrderRow(workId);
+  const db = getDB();
+  db.runSync(
+    `UPDATE work_orders SET work_order_document_path = ?, updated_at = datetime('now') WHERE work_id = ?;`,
+    [filePath, workId],
+  );
 };
 
 export const patchPaymentReceiptPath = (workId, filePath) => {

@@ -11,7 +11,20 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAllWorksForList, getWorkById } from '../db/repositories/worksRepository';
+import {
+  getAllWorksForList,
+  getWorkById,
+  migrateLegacyWorkflowSteps,
+} from '../db/repositories/worksRepository';
+
+const WORKFLOW_V12_MIGRATION_KEY = 'workflow_v12_migrated';
+
+const ensureWorkflowV12Migrated = async () => {
+  const migrated = await AsyncStorage.getItem(WORKFLOW_V12_MIGRATION_KEY);
+  if (migrated) return;
+  migrateLegacyWorkflowSteps();
+  await AsyncStorage.setItem(WORKFLOW_V12_MIGRATION_KEY, '1');
+};
 
 const useWorkStore = create(
   persist(
@@ -22,8 +35,9 @@ const useWorkStore = create(
       currentWork:   null,
 
       // ─── Load all works from SQLite into store ─────────────────────────────
-      refreshWorks: () => {
+      refreshWorks: async () => {
         try {
+          await ensureWorkflowV12Migrated();
           const works = getAllWorksForList();
           set({ works });
         } catch (error) {
@@ -32,7 +46,7 @@ const useWorkStore = create(
       },
 
       // ─── Set which work is being edited / viewed ───────────────────────────
-      setCurrentWorkId: (id) => {
+      setCurrentWorkId: async (id) => {
         const normalized =
           id == null || id === ''
             ? null
@@ -45,6 +59,7 @@ const useWorkStore = create(
         set({ currentWorkId: workId });
         if (workId) {
           try {
+            await ensureWorkflowV12Migrated();
             const work = getWorkById(workId);
             set({ currentWork: work ?? null });
           } catch (error) {
@@ -56,10 +71,11 @@ const useWorkStore = create(
       },
 
       // ─── Refresh currentWork from SQLite (after a step save) ──────────────
-      refreshCurrentWork: () => {
+      refreshCurrentWork: async () => {
         const { currentWorkId } = get();
         if (!currentWorkId) return;
         try {
+          await ensureWorkflowV12Migrated();
           const work = getWorkById(currentWorkId);
           set({ currentWork: work ?? null });
         } catch (error) {

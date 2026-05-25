@@ -35,7 +35,7 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
         const resolvedWorkId = currentWorkId ?? persistResult;
 
         if (!currentWorkId && persistResult) {
-          setCurrentWorkId(persistResult);
+          await setCurrentWorkId(persistResult);
         }
 
         const completedStepId = currentRoute
@@ -46,8 +46,8 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
           advanceWorkflowStep(resolvedWorkId, completedStepId);
         }
 
-        refreshCurrentWork();
-        clearDraft(screenKey, currentWorkId ?? undefined);
+        await refreshCurrentWork();
+        clearDraft(screenKey, resolvedWorkId ?? undefined);
         navigation.navigate(nextRoute);
       } catch (error) {
         console.error(`[useSaveAndContinue] ${screenKey} save failed:`, error);

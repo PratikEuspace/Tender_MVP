@@ -17,6 +17,8 @@ const INITIAL_DRAFTS = {
   contractorAssignment:  {},
   sanctionApproval:      {},
   paymentStatus:         {},
+  workProgress:          {},
+  billSubmission:        {},
 };
 
 const toWorkKey = (workId) => {

@@ -2,6 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
+
 const ReportShareCard = ({ style }) => (
   <Pressable
     style={[styles.card, style]}
@@ -27,8 +29,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...dashboardCardSurfaceStyle,
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 8,

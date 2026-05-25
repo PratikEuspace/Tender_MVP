@@ -4,6 +4,7 @@
 // (step.id > works.workflow_step). Step 1 is always allowed (creates work).
 
 import { useEffect } from 'react';
+import { getWorkById } from '../db/repositories/worksRepository';
 import useWorkStore from '../store/useWorkStore';
 import {
   getStepByRoute,
@@ -25,7 +26,12 @@ const useWorkflowStepGuard = (routeName, navigation) => {
         return;
       }
 
-      const workflowStep = currentWork?.workflow_step ?? 1;
+      // Read SQLite on focus so guard sees workflow_step after Save & Continue
+      // even if Zustand has not rehydrated yet.
+      const workflowStep =
+        getWorkById(currentWorkId)?.workflow_step ??
+        currentWork?.workflow_step ??
+        1;
       if (step.id > workflowStep) {
         navigation.replace(WORKFLOW_ROUTES.ADD_WORK);
       }

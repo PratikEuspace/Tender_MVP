@@ -2,6 +2,8 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
+
 const ExportCard = ({ iconName, title }) => (
   <Pressable style={styles.exportCard} accessibilityRole="button" accessibilityLabel={title}>
     <View style={styles.exportIconWrap}>
@@ -42,8 +44,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...dashboardCardSurfaceStyle,
     paddingVertical: 18,
     paddingHorizontal: 12,
     alignItems: 'center',

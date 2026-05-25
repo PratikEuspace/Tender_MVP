@@ -1,6 +1,6 @@
 /**
  * Shared form field design tokens — master reference: Inputboxfield (Letter Number).
- * Import in Inputboxfield, CalendarPicker, FormToggleField, UploadDocument, etc.
+ * Import in Inputboxfield, NativeDateField, FormDropdown, FormToggleField, UploadDocument, etc.
  */
 
 import { StyleSheet } from 'react-native';

@@ -10,7 +10,7 @@ import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 
 // ─── Form components ──────────────────────────────────────────────────────────
-import DropdownModal from '../../../components/DropdownModal';
+import FormDropdown from '../../../components/FormDropdown';
 import Inputboxfield from '../../../components/Inputboxfield';
 import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
@@ -19,13 +19,13 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 // ─── State & data ─────────────────────────────────────────────────────────────
-import {
-  getContractorByWorkId,
-  mapContractorRowToForm,
-  normalizeEstimateType,
-  upsertContractorAssignment,
-} from '../../../db/repositories/contractorRepository';
 import { CONTRACTOR_ESTIMATE_OPTIONS } from '../../../constants/dropdownOptions';
+import {
+    getContractorByWorkId,
+    mapContractorRowToForm,
+    normalizeEstimateType,
+    upsertContractorAssignment,
+} from '../../../db/repositories/contractorRepository';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
 import useDraftStore from '../../../store/useDraftStore';
@@ -33,18 +33,11 @@ import useWorkStore from '../../../store/useWorkStore';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import {
-  TOTAL_WORKFLOW_STEPS,
-  WORKFLOW_ROUTES,
+    TOTAL_WORKFLOW_STEPS,
+    WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 
 import theme from '../../../theme';
-
-// ─── Validation ───────────────────────────────────────────────────────────────
-const validate = (form) => {
-  const errors = {};
-  if (!form.contractor_name?.trim()) errors.contractor_name = 'Contractor name is required';
-  return errors;
-};
 
 // ─── Initial form state ───────────────────────────────────────────────────────
 // Persisted: contractor_name, contractor_contact, percentage_above_below,
@@ -62,12 +55,11 @@ const EMPTY_FORM = {
 const ContractorAssignmentScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.CONTRACTOR_ASSIGNMENT, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
-  const [directionModalVisible, setDirectionModalVisible] = useState(false);
 
   // ─── Hydrate: draft → SQLite ───────────────────────────────────────────────
   useEffect(() => {
@@ -112,20 +104,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
       queueMicrotask(() => setDraft('contractorAssignment', updated));
       return updated;
     });
-    if (errors[key]) {
-      setErrors((prev) => { const e = { ...prev }; delete e[key]; return e; });
-    }
-  }, [errors, setDraft]);
-
-  // ─── Estimate direction dropdown (DropdownModal passes full option object) ───
-  const handleSelectDirection = useCallback((option) => {
-    updateField('percentage_above_below', option.value);
-    setDirectionModalVisible(false);
-  }, [updateField]);
-
-  const displayDirection =
-    CONTRACTOR_ESTIMATE_OPTIONS.find((o) => o.value === form.percentage_above_below)?.label
-    ?? 'Above';
+  }, [setDraft]);
 
   // ─── Save & Continue ──────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -150,12 +129,6 @@ const ContractorAssignmentScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
     saveAndContinue(form, navigation, {
       onValidationFail: (msg) => Alert.alert('Save Failed', msg),
     });
@@ -193,8 +166,6 @@ const ContractorAssignmentScreen = ({ navigation }) => {
           placeholder="Enter full name"
           value={form.contractor_name}
           onChangeText={(v) => updateField('contractor_name', v)}
-          error={errors.contractor_name}
-          required
         />
 
         {/* Contractor Contact */}
@@ -213,14 +184,13 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
           {/* Direction dropdown — compact left cell */}
           <View style={styles.directionCell}>
-            <Inputboxfield
+            <FormDropdown
               placeholder="Above"
-              value={displayDirection}
-              type="dropdown"
-              onPress={() => setDirectionModalVisible(true)}
-              containerStyle={styles.noMargin}
-              style={styles.directionInputWrapper}
-              inputStyle={styles.directionInputText}
+              data={CONTRACTOR_ESTIMATE_OPTIONS}
+              value={form.percentage_above_below || null}
+              onChange={(item) => updateField('percentage_above_below', item.value)}
+              style={styles.noMargin}
+              fieldStyle={styles.directionField}
             />
           </View>
 
@@ -273,16 +243,6 @@ const ContractorAssignmentScreen = ({ navigation }) => {
         style={styles.cta}
       />
 
-      {/* Direction dropdown modal */}
-      <DropdownModal
-        visible={directionModalVisible}
-        title="Select Direction"
-        options={CONTRACTOR_ESTIMATE_OPTIONS}
-        selectedValue={form.percentage_above_below}
-        onSelect={handleSelectDirection}
-        onClose={() => setDirectionModalVisible(false)}
-      />
-
     </ScreenLayout>
   );
 };
@@ -314,12 +274,8 @@ const styles = StyleSheet.create({
     width: '36%',
     maxWidth: 148,
   },
-  directionInputWrapper: {
+  directionField: {
     paddingHorizontal: 12,
-  },
-  directionInputText: {
-    flex: 1,
-    minWidth: 0,
   },
   // Percentage input — takes remaining width
   percentCell: {

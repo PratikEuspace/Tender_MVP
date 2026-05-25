@@ -1,0 +1,174 @@
+// Step 11: Bill Submission
+
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+
+import Inputboxfield from '../../../components/Inputboxfield';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
+import WorkflowProgress from '../../../components/layouts/Workflowprogress';
+import NativeDateField from '../../../components/NativeDateField';
+import PrimaryButton from '../../../components/PrimaryButton';
+import BillDocumentUpload from '../../../components/workflow/BillDocumentUpload';
+import BillSubmissionToggle from '../../../components/workflow/BillSubmissionToggle';
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import {
+    getBillSubmissionByWorkId,
+    mapBillSubmissionRowToForm,
+    upsertBillSubmission,
+} from '../../../db/repositories/billSubmissionRepository';
+import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
+import theme from '../../../theme';
+import { formatDateForStorage } from '../../../utils/dateFormat';
+
+const STEP = 11;
+
+const EMPTY_FORM = {
+  bill_submitted: false,
+  bill_number: '',
+  bill_date: '',
+  bill_document: '',
+};
+
+const BillSubmissionWorkflowScreen = ({ navigation }) => {
+  useWorkflowStepGuard(WORKFLOW_ROUTES.BILL_SUBMISSION, navigation);
+
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
+  const replaceDraft = useDraftStore((s) => s.replaceDraft);
+  const { currentWorkId } = useWorkStore();
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    const hydrate = () => {
+      const draft = getDraft('billSubmission', currentWorkId);
+      if (draft && Object.keys(draft).length > 0) {
+        setForm({
+          bill_submitted: Boolean(draft.bill_submitted),
+          bill_number: draft.bill_number ?? '',
+          bill_date: formatDateForStorage(draft.bill_date),
+          bill_document: draft.bill_document ?? '',
+        });
+        return;
+      }
+
+      if (!currentWorkId) return;
+
+      try {
+        const row = getBillSubmissionByWorkId(currentWorkId);
+        const hydrated = mapBillSubmissionRowToForm(row);
+        if (!hydrated) return;
+
+        setForm(hydrated);
+        queueMicrotask(() => replaceDraft('billSubmission', hydrated, currentWorkId));
+      } catch (e) {
+        console.warn('[BillSubmission] hydration error:', e);
+      }
+    };
+
+    hydrate();
+  }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateField = useCallback(
+    (key, value) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        const workId = currentWorkId;
+        queueMicrotask(() => setDraft('billSubmission', updated, workId ?? undefined));
+        return updated;
+      });
+    },
+    [currentWorkId, setDraft],
+  );
+
+  const handleToggle = useCallback(() => {
+    updateField('bill_submitted', !form.bill_submitted);
+  }, [form.bill_submitted, updateField]);
+
+  const { saveAndContinue, isSaving } = useSaveAndContinue(
+    'billSubmission',
+    (workId, data) => upsertBillSubmission(workId, data),
+    WORKFLOW_ROUTES.COMPLETION_CLOSURE,
+    WORKFLOW_ROUTES.BILL_SUBMISSION,
+  );
+
+  const handleSave = () => {
+    saveAndContinue(form, navigation, {
+      onValidationFail: (m) => Alert.alert('Save Failed', m),
+    });
+  };
+
+  return (
+    <ScreenLayout
+      title="Bill Submission"
+      showBack
+      showNotification
+      scrollable
+      keyboardAware
+      onBackPress={() => navigation.goBack()}
+    >
+      <WorkflowProgress
+        currentStep={STEP}
+        totalSteps={TOTAL_WORKFLOW_STEPS}
+        showPercentage
+        style={styles.progress}
+      />
+      <ProgressSlot
+        step={STEP}
+        title="Bill Submission"
+        description="Payment is not pay"
+        screenType="billSubmission"
+        statusType="error"
+      />
+
+      <View style={styles.form}>
+        <BillSubmissionToggle value={form.bill_submitted} onToggle={handleToggle} />
+
+        {form.bill_submitted ? (
+          <>
+            <Inputboxfield
+              label="Bill number"
+              placeholder="Bill number"
+              value={form.bill_number}
+              onChangeText={(v) => updateField('bill_number', v)}
+            />
+            <NativeDateField
+              label="Bill date"
+              placeholder="dd/mm/yy"
+              value={form.bill_date}
+              onDateChange={(date) => updateField('bill_date', formatDateForStorage(date))}
+            />
+          </>
+        ) : null}
+
+        <BillDocumentUpload
+          workId={currentWorkId}
+          filePath={form.bill_document}
+          onChange={(path) => updateField('bill_document', path)}
+        />
+      </View>
+
+      <PrimaryButton
+        title="Save & Continue"
+        loading={isSaving}
+        fullWidth
+        style={styles.cta}
+        onPress={handleSave}
+      />
+    </ScreenLayout>
+  );
+};
+
+const styles = StyleSheet.create({
+  progress: { marginBottom: theme.Spacing?.sm ?? 8 },
+  form: { marginTop: theme.Spacing?.sm ?? 8 },
+  cta: {
+    marginTop: theme.Spacing?.lg ?? 24,
+    marginBottom: theme.Spacing?.xl ?? 32,
+  },
+});
+
+export default BillSubmissionWorkflowScreen;

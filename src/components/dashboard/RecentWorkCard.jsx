@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { dashboardCardBorderStyle } from './dashboardCardBorder';
+
 const STATUS_STYLES = {
   completed: { label: 'Completed', color: '#2F5E34' },
   pending: { label: 'Pending', color: '#8B2513' },
@@ -45,8 +47,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    ...dashboardCardBorderStyle,
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 10,

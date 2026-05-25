@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import LargeToggleSwitch from './LargeToggleSwitch';
 import {
   formFieldStyles,
   FORM_FIELD_PLACEHOLDER_COLOR,
 } from '../theme/formFieldStyles';
+import { dismissKeyboardBeforeOverlay } from '../utils/keyboardDismiss';
 
 /**
  * Toggle row styled as a standard form field (matches Inputboxfield).
@@ -23,9 +24,11 @@ const FormToggleField = ({
   const innerLabel = rowLabel ?? label;
   const showHeaderLabel = label && rowLabel && label !== rowLabel;
 
-  const handleToggle = () => {
-    if (!disabled && onToggle) onToggle();
-  };
+  const handleToggle = useCallback(() => {
+    if (disabled || !onToggle) return;
+    dismissKeyboardBeforeOverlay();
+    onToggle();
+  }, [disabled, onToggle]);
 
   return (
     <View style={[formFieldStyles.container, containerStyle]}>

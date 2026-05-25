@@ -4,6 +4,7 @@
 // No UI, no state, no hooks — input/output only.
 // All screens access works data through this file via hooks.
 
+import { WORKFLOW_ALL_COMPLETE_STEP } from '../../constants/WorkflowSteps';
 import { getDB } from '../database';
 
 // ─── Create a new work record ─────────────────────────────────────────────────
@@ -109,4 +110,27 @@ export const upsertWorkDetails = (workId, data) => {
 export const deleteWork = (id) => {
   const db = getDB();
   db.runSync('DELETE FROM works WHERE id = ?;', [id]);
+};
+
+/** One-time map from 9-step workflow_step to 12-step (payment/completion ids shifted). */
+const LEGACY_WORKFLOW_STEP_MAP = {
+  8: 10,
+  9: 12,
+  10: WORKFLOW_ALL_COMPLETE_STEP,
+};
+
+// ─── Migrate legacy workflow_step values (9-step → 12-step) ───────────────────
+export const migrateLegacyWorkflowSteps = () => {
+  const db = getDB();
+  const rows = db.getAllSync('SELECT id, workflow_step FROM works;', []);
+  const now = new Date().toISOString();
+
+  for (const row of rows) {
+    const mapped = LEGACY_WORKFLOW_STEP_MAP[row.workflow_step];
+    if (mapped == null) continue;
+    db.runSync(
+      'UPDATE works SET workflow_step = ?, updated_at = ? WHERE id = ?;',
+      [mapped, now, row.id],
+    );
+  }
 };

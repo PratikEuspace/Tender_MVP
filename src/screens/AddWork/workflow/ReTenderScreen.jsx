@@ -2,37 +2,36 @@
 // Step 5 of 9: Re-Tender (Optional)
 //
 // Toggle OFF  → fields hidden, no validation, save advances workflow.
-// Toggle ON   → 4 fields required, persisted in `retenders` per work_id.
+// Toggle ON   → fields shown, persisted in `retenders` per work_id.
 
-import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
 
-import CalendarPicker from '../../../components/CalendarPicker';
 import FormToggleField from '../../../components/FormToggleField';
 import Inputboxfield from '../../../components/Inputboxfield';
+import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
-import { formFieldStyles } from '../../../theme/formFieldStyles';
 
-import useDraftStore from '../../../store/useDraftStore';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 
 import {
-  getReTenderByWorkId,
-  mapReTenderRowToForm,
-  upsertReTender,
+    getReTenderByWorkId,
+    mapReTenderRowToForm,
+    upsertReTender,
 } from '../../../db/repositories/retendersRepository';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 
 import {
-  TOTAL_WORKFLOW_STEPS,
-  WORKFLOW_ROUTES,
+    TOTAL_WORKFLOW_STEPS,
+    WORKFLOW_ROUTES,
 } from '../../../constants/WorkflowSteps';
 
 import theme from '../../../theme';
@@ -45,38 +44,18 @@ const EMPTY_FORM = {
   retender_reason: '',
 };
 
-const validate = (form) => {
-  const errors = {};
-  if (!form.enable_retender) return errors;
-
-  if (!form.previous_tender_reference?.trim()) {
-    errors.previous_tender_reference = 'Previous tender reference is required';
-  }
-  if (!form.new_tender_date) {
-    errors.new_tender_date = 'New tender date is required';
-  }
-  if (!form.new_tender_amount?.toString().trim()) {
-    errors.new_tender_amount = 'New tender amount is required';
-  }
-  if (!form.retender_reason?.trim()) {
-    errors.retender_reason = 'Re-tender reason is required';
-  }
-  return errors;
-};
-
 const ReTenderScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.RE_TENDER, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
 
   const loadReTenderForm = useCallback(() => {
     if (!currentWorkId) {
       setForm(EMPTY_FORM);
-      setErrors({});
       return;
     }
 
@@ -119,15 +98,8 @@ const ReTenderScreen = ({ navigation }) => {
         queueMicrotask(() => setDraft('reTender', updated, currentWorkId));
         return updated;
       });
-      if (errors[key]) {
-        setErrors((prev) => {
-          const e = { ...prev };
-          delete e[key];
-          return e;
-        });
-      }
     },
-    [currentWorkId, errors, setDraft],
+    [currentWorkId, setDraft],
   );
 
   const handleToggle = useCallback(() => {
@@ -140,7 +112,6 @@ const ReTenderScreen = ({ navigation }) => {
       queueMicrotask(() => setDraft('reTender', next, currentWorkId));
       return next;
     });
-    setErrors({});
   }, [currentWorkId, setDraft]);
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -162,17 +133,6 @@ const ReTenderScreen = ({ navigation }) => {
   );
 
   const handleSave = () => {
-    if (!currentWorkId) {
-      Alert.alert('Error', 'Work ID not found. Please restart from Work Details.');
-      return;
-    }
-
-    const validationErrors = validate(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-    setErrors({});
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -216,27 +176,17 @@ const ReTenderScreen = ({ navigation }) => {
                 placeholder="e.g TND-2025-001"
                 value={form.previous_tender_reference}
                 onChangeText={(v) => updateField('previous_tender_reference', v)}
-                error={errors.previous_tender_reference}
-                required
               />
             </View>
 
-            <View>
-              <CalendarPicker
-                label="New tender date"
-                placeholder="dd/mm/yyyy"
-                value={form.new_tender_date}
-                onDateChange={(date) =>
-                  updateField('new_tender_date', formatDateForStorage(date))
-                }
-                required
-              />
-              {errors.new_tender_date ? (
-                <Text style={formFieldStyles.errorText}>
-                  {errors.new_tender_date}
-                </Text>
-              ) : null}
-            </View>
+            <NativeDateField
+              label="New tender date"
+              placeholder="dd/mm/yyyy"
+              value={form.new_tender_date}
+              onDateChange={(date) =>
+                updateField('new_tender_date', formatDateForStorage(date))
+              }
+            />
 
             <Inputboxfield
               label="New tender amount (₹)"
@@ -245,8 +195,6 @@ const ReTenderScreen = ({ navigation }) => {
               type="number"
               keyboardType="numeric"
               onChangeText={(v) => updateField('new_tender_amount', v)}
-              error={errors.new_tender_amount}
-              required
             />
 
             <Inputboxfield
@@ -256,8 +204,6 @@ const ReTenderScreen = ({ navigation }) => {
               multiline
               numberOfLines={2}
               onChangeText={(v) => updateField('retender_reason', v)}
-              error={errors.retender_reason}
-              required
             />
           </>
         )}

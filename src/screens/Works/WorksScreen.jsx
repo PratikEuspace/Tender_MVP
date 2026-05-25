@@ -12,6 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
+import SettingsDrawer from '../../components/Settingsdrawer';
 import StatusChip from '../../components/Statuschip';
 import StatusChipGroup from '../../components/Statuschipgroup';
 import {
@@ -69,6 +70,7 @@ const WorkListCard = ({ work, onPress }) => {
 
 const WorksScreen = ({ navigation }) => {
   const { works, refreshWorks, setCurrentWorkId } = useWorkStore();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
   useFocusEffect(
@@ -112,24 +114,37 @@ const WorksScreen = ({ navigation }) => {
   );
 
   return (
-    <ScreenLayout title="Work List" showMenu={false} showNotification scrollable={false}>
-      <FlatList
-        style={styles.list}
-        data={filteredWorks}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No works yet.</Text>
-            <Text style={styles.emptyHint}>
-              Add a work from the Add Work tab to get started.
-            </Text>
-          </View>
-        }
+    <>
+      <ScreenLayout
+        title="Work List"
+        showMenu
+        showNotification
+        scrollable={false}
+        onMenuPress={() => setDrawerOpen(true)}
+      >
+        <FlatList
+          style={styles.list}
+          data={filteredWorks}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
+          ListHeaderComponent={ListHeader}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No works yet.</Text>
+              <Text style={styles.emptyHint}>
+                Add a work from the Add Work tab to get started.
+              </Text>
+            </View>
+          }
+        />
+      </ScreenLayout>
+
+      <SettingsDrawer
+        visible={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
       />
-    </ScreenLayout>
+    </>
   );
 };
 

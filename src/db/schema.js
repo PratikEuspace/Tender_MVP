@@ -153,6 +153,46 @@ const CREATE_RETENDERS = `
   );
 `;
 
+const CREATE_WORK_ORDERS = `
+  CREATE TABLE IF NOT EXISTS work_orders (
+    id                         INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_id                    INTEGER NOT NULL,
+    work_order_number          TEXT,
+    work_start_date            TEXT,
+    expected_completion_date   TEXT,
+    work_order_document_path   TEXT,
+    created_at                 TEXT DEFAULT (datetime('now')),
+    updated_at                 TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (work_id) REFERENCES works(id) ON DELETE CASCADE
+  );
+`;
+
+const CREATE_WORK_PROGRESS = `
+  CREATE TABLE IF NOT EXISTS work_progress (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_id      INTEGER NOT NULL,
+    site_notes   TEXT,
+    site_photos  TEXT,
+    created_at   TEXT DEFAULT (datetime('now')),
+    updated_at   TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (work_id) REFERENCES works(id) ON DELETE CASCADE
+  );
+`;
+
+const CREATE_BILL_SUBMISSIONS = `
+  CREATE TABLE IF NOT EXISTS bill_submissions (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    work_id         INTEGER NOT NULL,
+    bill_submitted  INTEGER DEFAULT 0,
+    bill_number     TEXT,
+    bill_date       TEXT,
+    bill_document   TEXT,
+    created_at      TEXT DEFAULT (datetime('now')),
+    updated_at      TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (work_id) REFERENCES works(id) ON DELETE CASCADE
+  );
+`;
+
 const CREATE_COMPLETION_CLOSURE = `
   CREATE TABLE IF NOT EXISTS completion_closure (
     id                           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -178,7 +218,10 @@ const MIGRATIONS = [
   CREATE_PAYMENTS,
   CREATE_DOCUMENTS,
   CREATE_RETENDERS,
-  CREATE_COMPLETION_CLOSURE, 
+  CREATE_WORK_ORDERS,
+  CREATE_WORK_PROGRESS,
+  CREATE_BILL_SUBMISSIONS,
+  CREATE_COMPLETION_CLOSURE,
 ];
 
 // ─── Additive column migrations (run after table creation) ────────────────────
@@ -202,6 +245,9 @@ const runColumnMigrations = (db) => {
     `ALTER TABLE payments ADD COLUMN payment_receipt_path TEXT;`,
     // v6 — one retenders row per work
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_retenders_work_id ON retenders(work_id);`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_work_orders_work_id ON work_orders(work_id);`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_work_progress_work_id ON work_progress(work_id);`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_bill_submissions_work_id ON bill_submissions(work_id);`,
   ];
 
   columnMigrations.forEach((sql) => {

@@ -1,211 +1,109 @@
-// src/screens/AddWork/workflow/WorkOrderScreen.jsx
-// Step 8 of 10: Work Order / Start Work  →  renamed header: "Work Progress Tracking"
-//
-// Figma changes from stub:
-//   - Screen title  : "Work Progress Tracking"
-//   - ProgressSlot  : description → "Work order issued / Work started"
-//   - Form area     : TWO date inputs REMOVED entirely
-//   - Added         : Overall progress card (circle ring + linear bar + timestamp)
-//   - No new inputs, no new DB fields — display-only card as per Figma
+// Step 8: Work Order / Start
 
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import ScreenLayout     from '../../../components/layouts/Screenlayout';
+import Inputboxfield from '../../../components/Inputboxfield';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
-import ProgressSlot     from '../../../components/layouts/Progressslot';
-import PrimaryButton    from '../../../components/PrimaryButton';
-
-import useWorkStore       from '../../../store/useWorkStore';
+import NativeDateField from '../../../components/NativeDateField';
+import PrimaryButton from '../../../components/PrimaryButton';
+import UploadDocument from '../../../components/UploadDocument';
+import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import {
+    getWorkOrderByWorkId,
+    mapWorkOrderRowToForm,
+    upsertWorkOrder,
+} from '../../../db/repositories/workOrdersRepository';
+import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
-import { WORKFLOW_ROUTES, TOTAL_WORKFLOW_STEPS } from '../../../constants/WorkflowSteps';
+import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
+import { formatDateForStorage } from '../../../utils/dateFormat';
+import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
-// ─── Colour tokens ────────────────────────────────────────────────────────────
-const RING_COLOR    = '#1D6B43';   // dark green — matches Figma ring
-const RING_TRACK    = '#D9EDE2';   // light green-gray track
-const BAR_COLOR     = '#062E52';   // navy fill — matches Figma linear bar
-const BAR_TRACK     = '#D5D5D5';   // gray empty track
-const WHITE         = theme.Colors?.white ?? '#FFFFFF';
-const TEXT          = theme.Colors?.text  ?? '#1A1A1A';
-const SECONDARY     = theme.Colors?.secondary ?? '#777777';
+const STEP = 8;
 
-// ─── Circular progress ring (pure View, no SVG, no library) ──────────────────
-// Uses the two-half-clip technique standard for React Native.
-//
-//  How it works:
-//   1. Full gray track circle behind everything.
-//   2. Right clip container (x: half → size, overflow hidden)
-//      → rotated inner circle reveals the RIGHT arc from 0° → min(deg, 180°)
-//   3. Left clip container  (x: 0 → half, overflow hidden)
-//      → rotated inner circle reveals the LEFT  arc from 180° → deg  (if deg > 180)
-const ProgressRing = ({ percent = 0, size = 90, strokeWidth = 9 }) => {
-  const half  = size / 2;
-  const deg   = (Math.min(Math.max(percent, 0), 100) / 100) * 360;
-  const rightDeg = Math.min(deg, 180);
-  const leftDeg  = Math.max(0, deg - 180);
-
-  return (
-    <View style={{ width: size, height: size }}>
-      {/* ── Gray track ──────────────────────────────────────────────────── */}
-      <View
-        style={{
-          position: 'absolute', width: size, height: size,
-          borderRadius: half,
-          borderWidth: strokeWidth,
-          borderColor: RING_TRACK,
-        }}
-      />
-
-      {/* ── Right half: 0° → min(deg, 180°) ─────────────────────────────── */}
-      <View
-        style={{
-          position: 'absolute', top: 0, left: half,
-          width: half, height: size, overflow: 'hidden',
-        }}
-      >
-        <View
-          style={{
-            position: 'absolute', top: 0, left: -half,
-            width: size, height: size,
-            borderRadius: half,
-            borderWidth: strokeWidth,
-            borderColor: RING_COLOR,
-            transform: [{ rotate: `${rightDeg - 90}deg` }],
-          }}
-        />
-      </View>
-
-      {/* ── Left half: 180° → deg (only when deg > 180°) ─────────────────── */}
-      {leftDeg > 0 && (
-        <View
-          style={{
-            position: 'absolute', top: 0, left: 0,
-            width: half, height: size, overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              position: 'absolute', top: 0, left: 0,
-              width: size, height: size,
-              borderRadius: half,
-              borderWidth: strokeWidth,
-              borderColor: RING_COLOR,
-              transform: [{ rotate: `${leftDeg - 90}deg` }],
-            }}
-          />
-        </View>
-      )}
-    </View>
-  );
+const EMPTY_FORM = {
+  work_order_number: '',
+  work_start_date: '',
+  expected_completion_date: '',
+  work_order_document_path: '',
 };
 
-// ─── Overall progress card ────────────────────────────────────────────────────
-const OverallProgressCard = ({ percent = 0 }) => {
-  const now      = new Date();
-  const timeStr  = now.toLocaleTimeString('en-IN', {
-    hour:   '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  });
-  const lastUpdated = `Last updated: today, ${timeStr}`;
-
-  return (
-    <View style={cardStyles.card}>
-      {/* ── Top row: text left, ring right ─────────────────────────────── */}
-      <View style={cardStyles.topRow}>
-        <View style={cardStyles.textCol}>
-          <Text style={cardStyles.heading}>Overall progress</Text>
-          <Text style={cardStyles.percent}>{Math.round(percent)}%</Text>
-          <Text style={cardStyles.updated}>{lastUpdated}</Text>
-        </View>
-        <ProgressRing percent={percent} size={88} strokeWidth={10} />
-      </View>
-
-      {/* ── Linear bar ──────────────────────────────────────────────────── */}
-      <View style={cardStyles.barTrack}>
-        <View style={[cardStyles.barFill, { width: `${Math.round(percent)}%` }]} />
-      </View>
-    </View>
-  );
-};
-
-const cardStyles = StyleSheet.create({
-  card: {
-    borderWidth:   1,
-    borderColor:   theme.Colors?.border ?? '#DDDDDD',
-    borderRadius:  theme.Radius?.md ?? 12,
-    backgroundColor: WHITE,
-    padding:       theme.Spacing?.lg ?? 16,
-    marginTop:     theme.Spacing?.sm ?? 8,
-  },
-  topRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    marginBottom:   theme.Spacing?.md ?? 14,
-  },
-  textCol: {
-    flex: 1,
-    marginRight: theme.Spacing?.md ?? 12,
-  },
-  heading: {
-    fontSize:      18,
-    fontWeight:   '500',
-    color:        TEXT,
-    marginBottom: 4,
-  },
-  percent: {
-    fontSize:     42,
-    fontWeight:   '700',
-    color:        TEXT,
-    lineHeight:   50,
-    letterSpacing: -1,
-  },
-  updated: {
-    fontSize:   theme.FontSize?.xs ?? 11,
-    color:      SECONDARY,
-    marginTop:  4,
-  },
-
-  // ── Linear bar ──────────────────────────────────────────────────────────
-  barTrack: {
-    height:       13,
-    borderRadius: 7,
-    backgroundColor: BAR_TRACK,
-    overflow:     'hidden',
-  },
-  barFill: {
-    height:       13,
-    borderRadius: 7,
-    backgroundColor: BAR_COLOR,
-  },
-});
-
-// ─── Persist stub (no fields to save on this screen) ─────────────────────────
-const persistStep = async (workId, _data) => workId;
-
-// ─── Main screen ──────────────────────────────────────────────────────────────
 const WorkOrderScreen = ({ navigation }) => {
-  const { currentWork } = useWorkStore();
+  useWorkflowStepGuard(WORKFLOW_ROUTES.WORK_ORDER, navigation);
 
-  // Derive progress from workflow_step stored in DB.
-  // workflow_step tracks how many steps have been saved; step 8 = 80 %.
-  // Clamp to [0, 100] for safety.
-  const progressPercent = useMemo(() => {
-    const step = currentWork?.workflow_step ?? 8;
-    return Math.min(100, Math.round((step / TOTAL_WORKFLOW_STEPS) * 100));
-  }, [currentWork]);
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
+  const { currentWorkId } = useWorkStore();
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  useEffect(() => {
+    const hydrate = () => {
+      const draft = getDraft('workOrder');
+      if (draft && Object.keys(draft).length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          ...draft,
+          work_start_date: formatDateForStorage(draft.work_start_date),
+          expected_completion_date: formatDateForStorage(draft.expected_completion_date),
+        }));
+        return;
+      }
+
+      if (!currentWorkId) return;
+
+      try {
+        const row = getWorkOrderByWorkId(currentWorkId);
+        const hydrated = mapWorkOrderRowToForm(row);
+        if (!hydrated) return;
+
+        setForm(hydrated);
+        queueMicrotask(() => setDraft('workOrder', hydrated));
+      } catch (e) {
+        console.warn('[WorkOrder] hydration error:', e);
+      }
+    };
+
+    hydrate();
+  }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateField = (key, val) => {
+    setForm((prev) => {
+      const updated = { ...prev, [key]: val };
+      queueMicrotask(() => setDraft('workOrder', updated));
+      return updated;
+    });
+  };
 
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'workOrder',
-    persistStep,
-    WORKFLOW_ROUTES.BILL_SUBMISSION,
+    (workId, data) => upsertWorkOrder(workId, data),
+    WORKFLOW_ROUTES.WORK_PROGRESS,
+    WORKFLOW_ROUTES.WORK_ORDER,
   );
+
+  const { pickDocument: pickWorkOrderDoc, uploading: uploadingWorkOrderDoc } =
+    useDocumentUpload(
+      currentWorkId,
+      DOCUMENT_TYPES.WORK_ORDER_DOCUMENT,
+      (filePath) => updateField('work_order_document_path', filePath),
+    );
+
+  const handleSave = () => {
+    saveAndContinue(form, navigation, {
+      onValidationFail: (m) => Alert.alert('Save Failed', m),
+    });
+  };
 
   return (
     <ScreenLayout
-      title="Work Progress Tracking"
+      title="Work Order / Start"
       showBack
       showNotification
       scrollable
@@ -213,40 +111,74 @@ const WorkOrderScreen = ({ navigation }) => {
       onBackPress={() => navigation.goBack()}
     >
       <WorkflowProgress
-        currentStep={8}
+        currentStep={STEP}
         totalSteps={TOTAL_WORKFLOW_STEPS}
         showPercentage
         style={styles.progress}
       />
       <ProgressSlot
-        step={8}
-        title="Work Order / Start Work"
+        step={STEP}
+        title="Work Order"
         description="Work order issued / Work started"
         screenType="workOrder"
       />
 
-      {/* Overall progress card — no inputs, display-only per Figma */}
-      <OverallProgressCard percent={progressPercent} />
+      <View style={styles.form}>
+        <Inputboxfield
+          label="Work order number"
+          placeholder="DKT 005-2035"
+          value={form.work_order_number}
+          onChangeText={(v) => updateField('work_order_number', v)}
+        />
+
+        <NativeDateField
+          label="Work start date"
+          placeholder="dd/mm/yyyy"
+          value={form.work_start_date}
+          onDateChange={(v) => updateField('work_start_date', formatDateForStorage(v))}
+        />
+
+        <NativeDateField
+          label="Expected completion"
+          placeholder="dd/mm/yyyy"
+          value={form.expected_completion_date}
+          onDateChange={(v) =>
+            updateField('expected_completion_date', formatDateForStorage(v))
+          }
+        />
+
+        <UploadDocument
+          sectionLabel="Documents"
+          documents={[
+            buildUploadDocumentEntry({
+              title: 'Work order document',
+              uploadText: 'Upload work order document',
+              filePath: form.work_order_document_path,
+              onPress: pickWorkOrderDoc,
+              loading: uploadingWorkOrderDoc,
+            }),
+          ]}
+        />
+      </View>
 
       <PrimaryButton
         title="Save & Continue"
         loading={isSaving}
         fullWidth
         style={styles.cta}
-        onPress={() =>
-          saveAndContinue({}, navigation, {
-            onValidationFail: (m) => Alert.alert('Save Failed', m),
-          })
-        }
+        onPress={handleSave}
       />
     </ScreenLayout>
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   progress: { marginBottom: theme.Spacing?.sm ?? 8 },
-  cta:      { marginTop: theme.Spacing?.lg ?? 24, marginBottom: theme.Spacing?.xl ?? 32 },
+  form: { marginTop: theme.Spacing?.sm ?? 8 },
+  cta: {
+    marginTop: theme.Spacing?.lg ?? 24,
+    marginBottom: theme.Spacing?.xl ?? 32,
+  },
 });
 
 export default WorkOrderScreen;

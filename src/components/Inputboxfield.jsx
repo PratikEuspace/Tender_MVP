@@ -1,16 +1,19 @@
-import React, { useRef } from 'react';
+import React, { forwardRef, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Platform,
+  StyleSheet,
 } from 'react-native';
 import theme from '../theme';
 import {
   formFieldStyles,
   FORM_FIELD_HEIGHT,
-  FORM_FIELD_H_PADDING,
+  FORM_FIELD_BORDER_WIDTH,
 } from '../theme/formFieldStyles';
+import { dismissKeyboardBeforeOverlay } from '../utils/keyboardDismiss';
 
 const ChevronDown = ({ size = 11, color = '#888888' }) => (
   <View style={{ width: size * 1.4, height: size, justifyContent: 'center', alignItems: 'center' }}>
@@ -37,7 +40,10 @@ const KEYBOARD_MAP = {
   dropdown: 'default',
 };
 
-const InputBoxField = ({
+const SINGLE_LINE_INPUT_HEIGHT =
+  FORM_FIELD_HEIGHT - FORM_FIELD_BORDER_WIDTH * 2;
+
+const InputBoxField = forwardRef(({
   label,
   value,
   placeholder,
@@ -57,7 +63,7 @@ const InputBoxField = ({
   style,
   inputStyle,
   containerStyle,
-}) => {
+}, ref) => {
   const inputRef = useRef(null);
 
   const isDropdown  = type === 'dropdown';
@@ -74,50 +80,74 @@ const InputBoxField = ({
 
   const resolvedKeyboard = keyboardType ?? KEYBOARD_MAP[type] ?? 'default';
 
-  const inputFieldElement = (
-    <View
+  const controlStyle = [
+    formFieldStyles.control,
+    error ? formFieldStyles.controlError : null,
+    isDisabled && formFieldStyles.controlDisabled,
+    multiline && {
+      height: undefined,
+      minHeight: FORM_FIELD_HEIGHT * (numberOfLines || 2),
+      paddingTop: 12,
+      alignItems: 'flex-start',
+    },
+    !multiline && !isTouchable && { alignItems: 'stretch' },
+    style,
+  ];
+
+  const textInputElement = (
+    <TextInput
+      ref={inputRef}
       style={[
-        formFieldStyles.control,
-        error ? formFieldStyles.controlError : null,
-        isDisabled && formFieldStyles.controlDisabled,
-        multiline && {
-          height: undefined,
-          minHeight: FORM_FIELD_HEIGHT * (numberOfLines || 2),
-          paddingTop: 12,
-          alignItems: 'flex-start',
-        },
-        style,
+        formFieldStyles.controlText,
+        !multiline && localStyles.singleLineInput,
+        multiline && localStyles.multilineInput,
+        leftIcon ? { marginLeft: 0 } : null,
+        resolvedRightIcon ? { marginRight: 0 } : null,
+        inputStyle,
       ]}
-    >
+      value={value}
+      placeholder={placeholder}
+      placeholderTextColor={theme.Colors?.inputPlaceholder ?? '#AAAAAA'}
+      onChangeText={onChangeText}
+      keyboardType={resolvedKeyboard}
+      secureTextEntry={secureTextEntry}
+      editable={!isTouchable && !isDisabled}
+      pointerEvents={isTouchable ? 'none' : 'auto'}
+      multiline={multiline}
+      numberOfLines={multiline ? numberOfLines : 1}
+      accessibilityLabel={label}
+      accessibilityHint={placeholder}
+      underlineColorAndroid="transparent"
+    />
+  );
+
+  const controlBody = (
+    <>
       {leftIcon ? <View style={formFieldStyles.leftIcon}>{leftIcon}</View> : null}
-
-      <TextInput
-        ref={inputRef}
-        style={[
-          formFieldStyles.controlText,
-          leftIcon ? { marginLeft: 0 } : null,
-          resolvedRightIcon ? { marginRight: 0 } : null,
-          multiline && { textAlignVertical: 'top' },
-          inputStyle,
-        ]}
-        value={value}
-        placeholder={placeholder}
-        placeholderTextColor={theme.Colors?.inputPlaceholder ?? '#AAAAAA'}
-        onChangeText={onChangeText}
-        keyboardType={resolvedKeyboard}
-        secureTextEntry={secureTextEntry}
-        editable={!isTouchable && !isDisabled}
-        pointerEvents={isTouchable ? 'none' : 'auto'}
-        multiline={multiline}
-        numberOfLines={multiline ? numberOfLines : 1}
-        accessibilityLabel={label}
-        accessibilityHint={placeholder}
-      />
-
+      {textInputElement}
       {resolvedRightIcon ? (
         <View style={formFieldStyles.rightIcon}>{resolvedRightIcon}</View>
       ) : null}
-    </View>
+    </>
+  );
+
+  const controlElement = isTouchable ? (
+    <TouchableOpacity
+      onPress={() => {
+        if (isDisabled) return;
+        dismissKeyboardBeforeOverlay();
+        onPress?.();
+      }}
+      activeOpacity={isDisabled ? 1 : 0.75}
+      accessible
+      accessibilityRole={isDropdown ? 'combobox' : 'button'}
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled }}
+    >
+      <View style={controlStyle}>{controlBody}</View>
+    </TouchableOpacity>
+  ) : (
+    <View style={controlStyle}>{controlBody}</View>
   );
 
   return (
@@ -129,24 +159,40 @@ const InputBoxField = ({
         </Text>
       ) : null}
 
-      {isTouchable ? (
-        <TouchableOpacity
-          onPress={isDisabled ? undefined : (onPress ?? (() => inputRef.current?.focus()))}
-          activeOpacity={isDisabled ? 1 : 0.75}
-          accessible
-          accessibilityRole={isDropdown ? 'combobox' : 'button'}
-          accessibilityLabel={label}
-          accessibilityState={{ disabled: isDisabled }}
-        >
-          {inputFieldElement}
-        </TouchableOpacity>
-      ) : (
-        inputFieldElement
-      )}
+      <View ref={ref} collapsable={false}>
+        {controlElement}
+      </View>
 
       {error ? <Text style={formFieldStyles.errorText}>{error}</Text> : null}
     </View>
   );
-};
+});
+
+InputBoxField.displayName = 'InputBoxField';
+
+const localStyles = StyleSheet.create({
+  singleLineInput: {
+    flex: 1,
+    alignSelf: 'stretch',
+    height: SINGLE_LINE_INPUT_HEIGHT,
+    minHeight: SINGLE_LINE_INPUT_HEIGHT,
+    paddingVertical: 0,
+    margin: 0,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: 'center',
+      },
+      default: {},
+    }),
+  },
+  multilineInput: {
+    flex: 1,
+    alignSelf: 'stretch',
+    width: '100%',
+    textAlignVertical: 'top',
+    paddingVertical: 0,
+  },
+});
 
 export default InputBoxField;

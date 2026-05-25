@@ -7,7 +7,9 @@ export const DOCUMENT_TYPES = {
   TENDER_NOTICE: 'tender_notice',
   CONTRACTOR_DETAILS: 'contractor_details',
   SANCTION_LETTER: 'sanction_letter',
+  WORK_ORDER_DOCUMENT: 'work_order_document',
   PAYMENT_RECEIPT: 'payment_receipt',
+  BILL_DOCUMENT: 'bill_document',
   COMPLETION_CERTIFICATE: 'completion_certificate',
   SITE_PHOTOS: 'site_photos',
 };
@@ -20,7 +22,9 @@ export const DOCUMENT_DEFAULT_BASENAMES = {
   [DOCUMENT_TYPES.TENDER_NOTICE]: 'tender_notice',
   [DOCUMENT_TYPES.CONTRACTOR_DETAILS]: 'contractor_details',
   [DOCUMENT_TYPES.SANCTION_LETTER]: 'sanction_letter',
+  [DOCUMENT_TYPES.WORK_ORDER_DOCUMENT]: 'work_order_document',
   [DOCUMENT_TYPES.PAYMENT_RECEIPT]: 'payment_receipt',
+  [DOCUMENT_TYPES.BILL_DOCUMENT]: 'bill_document',
   [DOCUMENT_TYPES.COMPLETION_CERTIFICATE]: 'completion_certificate',
   [DOCUMENT_TYPES.SITE_PHOTOS]: 'site_photos',
 };

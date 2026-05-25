@@ -1,13 +1,7 @@
 // src/constants/workflowSteps.js
 //
-// Single source of truth for:
-//   - Route name strings (never type them anywhere else)
-//   - Workflow step metadata (title, screenType, description)
-//   - Step order (id drives WorkflowProgress currentStep)
-//
-// FINAL workflow: 9 steps (see WORKFLOW_STEPS).
+// Single source of truth: routes, step order (12 steps), hub gating.
 
-// ─── Route name constants ─────────────────────────────────────────────────────
 export const WORKFLOW_ROUTES = {
   ADD_WORK: 'AddWork',
   WORK_DETAILS: 'WorkDetails',
@@ -17,16 +11,13 @@ export const WORKFLOW_ROUTES = {
   RE_TENDER: 'ReTender',
   CONTRACTOR_ASSIGNMENT: 'ContractorAssignment',
   SANCTION_APPROVAL: 'SanctionApproval',
-  // Step 8 — Payment Status (screen file: BillSubmissionScreen.jsx)
-  PAYMENT_STATUS: 'BillSubmission',
+  WORK_ORDER: 'WorkOrder',
+  WORK_PROGRESS: 'WorkProgress',
+  PAYMENT_STATUS: 'PaymentStatus',
   BILL_SUBMISSION: 'BillSubmission',
   COMPLETION_CLOSURE: 'CompletionClosure',
 };
 
-// ─── Ordered step definitions (9 steps) ───────────────────────────────────────
-// id        → step number shown in WorkflowProgress / ProgressSlot
-// route     → stack screen name
-// workflow_step in SQLite = id of the active step (1–9); 10 = all steps completed
 export const WORKFLOW_STEPS = [
   {
     id: 1,
@@ -86,6 +77,22 @@ export const WORKFLOW_STEPS = [
   },
   {
     id: 8,
+    route: WORKFLOW_ROUTES.WORK_ORDER,
+    title: 'Work Order',
+    screenType: 'workOrder',
+    description: 'Work order issued / work started',
+    optional: false,
+  },
+  {
+    id: 9,
+    route: WORKFLOW_ROUTES.WORK_PROGRESS,
+    title: 'Work Progress',
+    screenType: 'workProgress',
+    description: 'Track work completion progress',
+    optional: false,
+  },
+  {
+    id: 10,
     route: WORKFLOW_ROUTES.PAYMENT_STATUS,
     title: 'Payment Status',
     screenType: 'paymentStatus',
@@ -93,7 +100,15 @@ export const WORKFLOW_STEPS = [
     optional: false,
   },
   {
-    id: 9,
+    id: 11,
+    route: WORKFLOW_ROUTES.BILL_SUBMISSION,
+    title: 'Bill Submission',
+    screenType: 'billSubmission',
+    description: 'Submit bill details and documents',
+    optional: false,
+  },
+  {
+    id: 12,
     route: WORKFLOW_ROUTES.COMPLETION_CLOSURE,
     title: 'Completion & Closure',
     screenType: 'completionClosure',
@@ -104,11 +119,14 @@ export const WORKFLOW_STEPS = [
 
 export const TOTAL_WORKFLOW_STEPS = WORKFLOW_STEPS.length;
 
-// workflow_step after step 9 is saved — all hub cards show completed
+/** workflow_step value when all 12 steps are saved */
 export const WORKFLOW_ALL_COMPLETE_STEP = TOTAL_WORKFLOW_STEPS + 1;
 
 export const getStepByRoute = (route) =>
   WORKFLOW_STEPS.find((s) => s.route === route) ?? null;
+
+export const getStepById = (id) =>
+  WORKFLOW_STEPS.find((s) => s.id === id) ?? null;
 
 export const getNextRoute = (currentRoute) => {
   const idx = WORKFLOW_STEPS.findIndex((s) => s.route === currentRoute);
@@ -116,10 +134,10 @@ export const getNextRoute = (currentRoute) => {
   return WORKFLOW_STEPS[idx + 1].route;
 };
 
-// Hub gating: workflow_step = next active step id (1–9); 10 = finished
 export const deriveStepStatus = (stepId, workflowStep) => {
-  if (stepId < workflowStep) return 'completed';
-  if (stepId === workflowStep) return 'active';
+  const current = Number(workflowStep) || 1;
+  if (stepId < current) return 'completed';
+  if (stepId === current) return 'active';
   return 'locked';
 };
 

@@ -1,62 +1,159 @@
-// // src/screens/AddWork/workflow/WorkProgressTrackingScreen.jsx
-// // Step 9 of 10: Work Progress Tracking
+// Step 9: Work Progress Tracking
 
-// import React, { useState } from 'react';
-// import { View, StyleSheet, Alert } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
-// import ScreenLayout     from '../../../components/layouts/Screenlayout';     // ✅
-// import WorkflowProgress from '../../../components/layouts/Workflowprogress'; // ✅
-// import ProgressSlot     from '../../../components/layouts/Progressslot';     // ✅
-// import Inputboxfield    from '../../../components/Inputboxfield';              // ✅
-// import PrimaryButton    from '../../../components/PrimaryButton';              // ✅
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
+import WorkflowProgress from '../../../components/layouts/Workflowprogress';
+import PrimaryButton from '../../../components/PrimaryButton';
+import ReportCategoryChipRow from '../../../components/reports/ReportCategoryChipRow';
+import SiteNotes from '../../../components/workflow/SiteNotes';
+import SitePhotosUpload from '../../../components/workflow/SitePhotosUpload';
+import WorkProgressCompletionCard from '../../../components/workflow/WorkProgressCompletionCard';
+import WorkProgressStatusSection from '../../../components/workflow/WorkProgressStatusSection';
+import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
+import {
+    getWorkProgressByWorkId,
+    mapWorkProgressRowToForm,
+    upsertWorkProgress,
+} from '../../../db/repositories/workProgressRepository';
+import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
+import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
+import theme from '../../../theme';
 
-// import useDraftStore      from '../../../store/useDraftStore';
-// import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
-// import { WORKFLOW_ROUTES, TOTAL_WORKFLOW_STEPS } from '../../../constants/WorkflowSteps'; // ✅
-// import theme from '../../../theme';
+const STEP = 9;
 
-// const persistStep = async (workId, _data) => workId;
+const EMPTY_FORM = {
+  site_notes: '',
+  site_photos: [],
+};
 
-// const WorkProgressTrackingScreen = ({ navigation }) => {
-//   const { setDraft } = useDraftStore();
-//   const [form, setForm] = useState({ progress_percentage: '', progress_notes: '' });
+const WorkProgressTrackingScreen = ({ navigation }) => {
+  useWorkflowStepGuard(WORKFLOW_ROUTES.WORK_PROGRESS, navigation);
 
-//   const update = (key, val) => {
-//     setForm((p) => { const u = { ...p, [key]: val }; setDraft('workProgressTracking', u); return u; });
-//   };
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
+  const replaceDraft = useDraftStore((s) => s.replaceDraft);
+  const { currentWorkId } = useWorkStore();
+  const [form, setForm] = useState(EMPTY_FORM);
 
-//   const { saveAndContinue, isSaving } = useSaveAndContinue(
-//     'workProgressTracking', persistStep, WORKFLOW_ROUTES.BILL_SUBMISSION,
-//   );
+  useEffect(() => {
+    const hydrate = () => {
+      const draft = getDraft('workProgress', currentWorkId);
+      if (draft && (draft.site_notes != null || draft.site_photos?.length)) {
+        setForm({
+          site_notes: draft.site_notes ?? '',
+          site_photos: Array.isArray(draft.site_photos) ? draft.site_photos : [],
+        });
+        return;
+      }
 
-//   return (
-//     <ScreenLayout title="Work Progress Tracking" showBack showNotification scrollable keyboardAware
-//       onBackPress={() => navigation.goBack()}>
-//       <WorkflowProgress currentStep={9} totalSteps={TOTAL_WORKFLOW_STEPS}
-//         showPercentage style={styles.progress} />
-//       <ProgressSlot step={9} title="Work Progress Tracking"
-//         description="Track work completion progress" screenType="workProgress" />
+      if (!currentWorkId) return;
 
-//       <View style={styles.form}>
-//         <Inputboxfield label="Progress (%)" placeholder="0 - 100" type="number"
-//           value={form.progress_percentage} onChangeText={(v) => update('progress_percentage', v)} />
-//         <Inputboxfield label="Progress Notes" placeholder="Describe current status"
-//           value={form.progress_notes} onChangeText={(v) => update('progress_notes', v)}
-//           multiline numberOfLines={3} />
-//       </View>
+      try {
+        const row = getWorkProgressByWorkId(currentWorkId);
+        const hydrated = mapWorkProgressRowToForm(row);
+        if (!hydrated) return;
 
-//       <PrimaryButton title="Save & Continue" loading={isSaving} fullWidth style={styles.cta}
-//         onPress={() => saveAndContinue(form, navigation, {
-//           onValidationFail: (m) => Alert.alert('Save Failed', m),
-//         })} />
-//     </ScreenLayout>
-//   );
-// };
+        setForm(hydrated);
+        queueMicrotask(() => replaceDraft('workProgress', hydrated, currentWorkId));
+      } catch (e) {
+        console.warn('[WorkProgress] hydration error:', e);
+      }
+    };
 
-// const styles = StyleSheet.create({
-//   progress: { marginBottom: theme.Spacing?.sm ?? 8  },
-//   form:     { marginTop:    theme.Spacing?.sm ?? 8  },
-//   cta:      { marginTop:    theme.Spacing?.lg ?? 24, marginBottom: theme.Spacing?.xl ?? 32 },
-// });
+    hydrate();
+  }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-// export default WorkProgressTrackingScreen;
+  const updateField = useCallback(
+    (key, value) => {
+      setForm((prev) => {
+        const updated = { ...prev, [key]: value };
+        const workId = currentWorkId;
+        queueMicrotask(() => setDraft('workProgress', updated, workId ?? undefined));
+        return updated;
+      });
+    },
+    [currentWorkId, setDraft],
+  );
+
+  const { saveAndContinue, isSaving } = useSaveAndContinue(
+    'workProgress',
+    (workId, data) => upsertWorkProgress(workId, data),
+    WORKFLOW_ROUTES.PAYMENT_STATUS,
+    WORKFLOW_ROUTES.WORK_PROGRESS,
+  );
+
+  const handleSave = () => {
+    saveAndContinue(form, navigation, {
+      onValidationFail: (m) => Alert.alert('Save Failed', m),
+    });
+  };
+
+  return (
+    <ScreenLayout
+      title="Work Progress Tracking"
+      showBack
+      showNotification
+      scrollable
+      keyboardAware
+      onBackPress={() => navigation.goBack()}
+    >
+      <WorkflowProgress
+        currentStep={STEP}
+        totalSteps={TOTAL_WORKFLOW_STEPS}
+        showPercentage
+        style={styles.progress}
+      />
+      <ProgressSlot
+        step={STEP}
+        title="Work Progress Tracking"
+        description="Work order issued / Work started"
+        screenType="workProgress"
+      />
+
+      <View style={styles.content}>
+        <ReportCategoryChipRow style={styles.chips} />
+        <WorkProgressCompletionCard />
+        <WorkProgressStatusSection />
+        <SiteNotes
+          value={form.site_notes}
+          onChangeText={(v) => updateField('site_notes', v)}
+        />
+        <SitePhotosUpload
+          workId={currentWorkId}
+          photos={form.site_photos}
+          onChange={(photos) => updateField('site_photos', photos)}
+        />
+      </View>
+
+      <PrimaryButton
+        title="Save & Continue"
+        loading={isSaving}
+        fullWidth
+        style={styles.cta}
+        onPress={handleSave}
+      />
+    </ScreenLayout>
+  );
+};
+
+const styles = StyleSheet.create({
+  progress: { marginBottom: theme.Spacing?.sm ?? 8 },
+  content: {
+    marginTop: theme.Spacing?.sm ?? 8,
+  },
+  chips: {
+    marginBottom: 14,
+    marginHorizontal: -4,
+  },
+  cta: {
+    marginTop: theme.Spacing?.lg ?? 24,
+    marginBottom: theme.Spacing?.xl ?? 32,
+  },
+});
+
+export default WorkProgressTrackingScreen;

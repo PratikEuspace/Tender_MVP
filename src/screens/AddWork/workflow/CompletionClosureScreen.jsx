@@ -3,14 +3,13 @@
 // On submit → persists locally, clears all drafts, navigates to AddWork list.
 
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 
-import DropdownModal    from '../../../components/DropdownModal';
-import Inputboxfield    from '../../../components/Inputboxfield';
-import ProgressSlot     from '../../../components/layouts/Progressslot';
-import ScreenLayout     from '../../../components/layouts/Screenlayout';
+import FormDropdown from '../../../components/FormDropdown';
+import ProgressSlot from '../../../components/layouts/Progressslot';
+import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
-import PrimaryButton    from '../../../components/PrimaryButton';
+import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
@@ -18,10 +17,10 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
-import useDraftStore      from '../../../store/useDraftStore';
-import useWorkStore       from '../../../store/useWorkStore';
+import useDraftStore from '../../../store/useDraftStore';
+import useWorkStore from '../../../store/useWorkStore';
 
-import { WORK_COMPLETED_OPTIONS }          from '../../../constants/dropdownOptions';
+import { WORK_COMPLETED_OPTIONS } from '../../../constants/dropdownOptions';
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import { getCompletionClosureByWorkId, upsertCompletionClosure } from '../../../db/repositories/completionClosureRepository';
 import theme from '../../../theme';
@@ -43,19 +42,22 @@ const EMPTY_FORM = {
 const CompletionClosureScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.COMPLETION_CLOSURE, navigation);
 
-  const { getDraft, setDraft, clearAllDrafts } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
+  const clearAllDrafts = useDraftStore((s) => s.clearAllDrafts);
   const { currentWorkId, clearCurrentWork }    = useWorkStore();
 
-  const [form, setForm]         = useState(EMPTY_FORM);
+  const [form, setForm] = useState(EMPTY_FORM);
   const [isHydrated, setIsHydrated] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // ── Field updater ──────────────────────────────────────────────────────────
   const updateField = useCallback((key, value) => {
-    const updated = { ...form, [key]: value };
-    setForm(updated);
-    setDraft('completionClosure', updated);
-  }, [form, setDraft]);
+    setForm((prev) => {
+      const updated = { ...prev, [key]: value };
+      queueMicrotask(() => setDraft('completionClosure', updated));
+      return updated;
+    });
+  }, [setDraft]);
 
   // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -80,18 +82,6 @@ const CompletionClosureScreen = ({ navigation }) => {
     };
     hydrate();
   }, [currentWorkId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Dropdown handler ───────────────────────────────────────────────────────
-  const handleDropdownSelect = useCallback((option) => {
-    updateField('work_completed', option.value);
-    setDropdownOpen(false);
-  }, [updateField]);
-
-  // ── Resolve display label from value ──────────────────────────────────────
-  const getLabel = useCallback((options, value) => {
-    if (!value) return '';
-    return options.find((o) => o.value === value)?.label ?? value;
-  }, []);
 
   // ── Save & Continue ────────────────────────────────────────────────────────
   const { saveAndContinue, isSaving } = useSaveAndContinue(
@@ -121,10 +111,6 @@ const CompletionClosureScreen = ({ navigation }) => {
     );
 
   const handleSubmit = () => {
-    if (!currentWorkId) {
-      Alert.alert('Error', 'Work ID not found. Please restart from Work Details.');
-      return;
-    }
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -141,13 +127,13 @@ const CompletionClosureScreen = ({ navigation }) => {
       onBackPress={() => navigation.goBack()}
     >
       <WorkflowProgress
-        currentStep={9}
+        currentStep={12}
         totalSteps={TOTAL_WORKFLOW_STEPS}
         showPercentage
         style={styles.progress}
       />
       <ProgressSlot
-        step={9}
+        step={12}
         title="Completion & Closure"
         description="Mark work completion and close workflow"
         screenType="completionClosure"
@@ -155,13 +141,12 @@ const CompletionClosureScreen = ({ navigation }) => {
 
       <View style={styles.form}>
 
-        {/* ── Work Completed dropdown — same pattern as WorkDetailsScreen ── */}
-        <Inputboxfield
-          label="Work completed"
+        <FormDropdown
+          label="Work completion status"
           placeholder="Select status"
-          value={getLabel(WORK_COMPLETED_OPTIONS, form.work_completed)}
-          type="dropdown"
-          onPress={() => setDropdownOpen(true)}
+          data={WORK_COMPLETED_OPTIONS}
+          value={form.work_completed || null}
+          onChange={(item) => updateField('work_completed', item.value)}
         />
 
         <UploadDocument
@@ -193,16 +178,6 @@ const CompletionClosureScreen = ({ navigation }) => {
         fullWidth
         style={styles.cta}
         onPress={handleSubmit}
-      />
-
-      {/* ── Dropdown modal ─────────────────────────────────────────────────── */}
-      <DropdownModal
-        visible={dropdownOpen}
-        title="Work Completed"
-        options={WORK_COMPLETED_OPTIONS}
-        selectedValue={form.work_completed}
-        onSelect={handleDropdownSelect}
-        onClose={() => setDropdownOpen(false)}
       />
 
     </ScreenLayout>

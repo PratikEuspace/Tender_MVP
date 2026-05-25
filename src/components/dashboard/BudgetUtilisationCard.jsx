@@ -1,7 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { dashboardCardSurfaceStyle } from './dashboardCardBorder';
+import { dashboardSectionLabelStyle } from './dashboardTypography';
+
 const PRIMARY = '#062E52';
+const TRACK = '#E5E7EB';
+const PROGRESS_BAR_HEIGHT = 20;
+const PROGRESS_BAR_RADIUS = 10;
 
 const BudgetUtilisationCard = ({ percent = 65, title = 'Budget Utilisation', style }) => {
   const clamped = Math.min(Math.max(percent, 0), 100);
@@ -22,18 +28,17 @@ const BudgetUtilisationCard = ({ percent = 65, title = 'Budget Utilisation', sty
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    marginBottom: 16,
+    borderRadius: 15,
+    ...dashboardCardSurfaceStyle,
+    height: 80,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 10,
+    ...dashboardSectionLabelStyle,
+    marginBottom: 8,
   },
   barRow: {
     flexDirection: 'row',
@@ -41,23 +46,25 @@ const styles = StyleSheet.create({
   },
   track: {
     flex: 1,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E5E7EB',
+    height: PROGRESS_BAR_HEIGHT,
+    borderRadius: PROGRESS_BAR_RADIUS,
+    backgroundColor: TRACK,
     overflow: 'hidden',
-    marginRight: 10,
+    marginRight: 8,
+    maxWidth: 300,
   },
   fill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: PROGRESS_BAR_RADIUS,
     backgroundColor: PRIMARY,
   },
   percent: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#1A1A1A',
-    minWidth: 36,
+    minWidth: 38,
     textAlign: 'right',
+    lineHeight: 16,
   },
 });
 

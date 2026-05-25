@@ -1,19 +1,20 @@
 // src/screens/AddWork/workflow/BillSubmissionScreen.jsx
-// Step 8 of 9: Payment Status (stack route name: BillSubmission)
+// Step 10: Payment Status
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 
-import CalendarPicker from '../../../components/CalendarPicker';
-import Inputboxfield from '../../../components/Inputboxfield';
 import FormToggleField from '../../../components/FormToggleField';
+import Inputboxfield from '../../../components/Inputboxfield';
 import ProgressSlot from '../../../components/layouts/Progressslot';
 import ScreenLayout from '../../../components/layouts/Screenlayout';
 import WorkflowProgress from '../../../components/layouts/Workflowprogress';
+import NativeDateField from '../../../components/NativeDateField';
 import PrimaryButton from '../../../components/PrimaryButton';
 import UploadDocument from '../../../components/UploadDocument';
 import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
+import { formatDateForStorage } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
@@ -23,9 +24,9 @@ import useWorkStore from '../../../store/useWorkStore';
 
 import { TOTAL_WORKFLOW_STEPS, WORKFLOW_ROUTES } from '../../../constants/WorkflowSteps';
 import {
-  getPaymentByWorkId,
-  getPaymentSummaryForWork,
-  upsertPayment,
+    getPaymentByWorkId,
+    getPaymentSummaryForWork,
+    upsertPayment,
 } from '../../../db/repositories/paymentsRepository';
 import theme from '../../../theme';
 
@@ -41,14 +42,6 @@ const BORDER = theme.Colors?.border ?? '#E0E0E0';
 const WHITE = theme.Colors?.white ?? '#FFFFFF';
 const PENDING = '#C0392B';
 const PAID = '#1D6B43';
-
-// ─── Helper: Date → 'DD/MM/YYYY' ─────────────────────────────────────────────
-const toDateString = (date) => {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}/${m}/${y}`;
-};
 
 // ─── Summary card ─────────────────────────────────────────────────────────────
 const SummaryCard = ({ label, value, valueColor }) => (
@@ -92,7 +85,8 @@ const EMPTY_FORM = {
 const BillSubmissionScreen = ({ navigation }) => {
   useWorkflowStepGuard(WORKFLOW_ROUTES.PAYMENT_STATUS, navigation);
 
-  const { getDraft, setDraft } = useDraftStore();
+  const getDraft = useDraftStore((s) => s.getDraft);
+  const setDraft = useDraftStore((s) => s.setDraft);
   const { currentWorkId } = useWorkStore();
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -100,10 +94,12 @@ const BillSubmissionScreen = ({ navigation }) => {
 
   // ── Field updater ──────────────────────────────────────────────────────────
   const updateField = useCallback((key, value) => {
-    const updated = { ...form, [key]: value };
-    setForm(updated);
-    setDraft('paymentStatus', updated);
-  }, [form, setDraft]);
+    setForm((prev) => {
+      const updated = { ...prev, [key]: value };
+      queueMicrotask(() => setDraft('paymentStatus', updated));
+      return updated;
+    });
+  }, [setDraft]);
 
   // ── Toggle — boolean only, no event object ─────────────────────────────────
   const handleToggle = useCallback(() => {
@@ -155,7 +151,7 @@ const BillSubmissionScreen = ({ navigation }) => {
   const { saveAndContinue, isSaving } = useSaveAndContinue(
     'paymentStatus',
     (workId, data) => upsertPayment(workId, data),
-    WORKFLOW_ROUTES.COMPLETION_CLOSURE,
+    WORKFLOW_ROUTES.BILL_SUBMISSION,
     WORKFLOW_ROUTES.PAYMENT_STATUS,
   );
 
@@ -167,10 +163,6 @@ const BillSubmissionScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
-    if (!currentWorkId) {
-      Alert.alert('Error', 'Work ID not found. Please restart from Work Details.');
-      return;
-    }
     saveAndContinue(form, navigation, {
       onValidationFail: (m) => Alert.alert('Save Failed', m),
     });
@@ -187,13 +179,13 @@ const BillSubmissionScreen = ({ navigation }) => {
       onBackPress={() => navigation.goBack()}
     >
       <WorkflowProgress
-        currentStep={8}
+        currentStep={10}
         totalSteps={TOTAL_WORKFLOW_STEPS}
         showPercentage
         style={styles.progress}
       />
       <ProgressSlot
-        step={8}
+        step={10}
         title="Payment Status"
         description="Payment is not pay"
         screenType="paymentStatus"
@@ -234,14 +226,12 @@ const BillSubmissionScreen = ({ navigation }) => {
             onChangeText={(v) => updateField('amount_paid', v)}
           />
 
-          <View>
-            <CalendarPicker
-              label="Payment date"
-              placeholder="dd/mm/yy"
-              value={form.payment_date}
-              onDateChange={(date) => updateField('payment_date', toDateString(date))}
-            />
-          </View>
+          <NativeDateField
+            label="Payment date"
+            placeholder="dd/mm/yy"
+            value={form.payment_date}
+            onDateChange={(date) => updateField('payment_date', formatDateForStorage(date))}
+          />
 
           <UploadDocument
             sectionLabel="Documents"

@@ -1,9 +1,12 @@
 /**
- * Local document upload — Technical Guide §11 (expo-document-picker + expo-file-system).
- * Stores under app_documents/work_{workId}/ and persists paths to entity columns + documents table.
+ * Local document upload — expo-document-picker + expo-file-system (SDK 55).
+ * Static imports required: dynamic import() breaks Metro native module resolution.
  */
 
 import { Alert } from 'react-native';
+import { getDocumentAsync } from 'expo-document-picker';
+import { Directory, File, Paths } from 'expo-file-system';
+
 import {
   DOCUMENT_DEFAULT_BASENAMES,
   DOCUMENT_TYPES,
@@ -19,6 +22,7 @@ import {
   patchSitePhotosPath,
   patchTenderAdvertisementPath,
   patchTenderNoticePath,
+  patchWorkOrderDocumentPath,
 } from '../db/repositories/documentPathRepository';
 import { getFileNameFromPath } from '../utils/fileName';
 
@@ -31,10 +35,7 @@ const ALLOWED_MIME_TYPES = [
   'image/png',
 ];
 
-const PICKER_TYPES = [
-  'application/pdf',
-  'image/*',
-];
+const PICKER_TYPES = ['application/pdf', 'image/*'];
 
 const PATH_PATCHERS = {
   [DOCUMENT_TYPES.PMC_LETTER]: patchPmcLetterPath,
@@ -43,6 +44,7 @@ const PATH_PATCHERS = {
   [DOCUMENT_TYPES.TENDER_NOTICE]: patchTenderNoticePath,
   [DOCUMENT_TYPES.CONTRACTOR_DETAILS]: patchContractorDocumentPath,
   [DOCUMENT_TYPES.SANCTION_LETTER]: patchSanctionLetterPath,
+  [DOCUMENT_TYPES.WORK_ORDER_DOCUMENT]: patchWorkOrderDocumentPath,
   [DOCUMENT_TYPES.PAYMENT_RECEIPT]: patchPaymentReceiptPath,
   [DOCUMENT_TYPES.COMPLETION_CERTIFICATE]: patchCompletionCertificatePath,
   [DOCUMENT_TYPES.SITE_PHOTOS]: patchSitePhotosPath,
@@ -76,30 +78,17 @@ const buildStoredFileName = (defaultBasename, originalName, mimeType) => {
   return `${base}.${ext}`;
 };
 
-/** Lazy-load native modules so screens mount before a dev build includes them. */
-let nativeModulesPromise = null;
-
-const loadNativeModules = async () => {
-  if (!nativeModulesPromise) {
-    nativeModulesPromise = Promise.all([
-      import('expo-document-picker'),
-      import('expo-file-system'),
-    ]).then(([DocumentPicker, FileSystem]) => ({
-      DocumentPicker,
-      Directory: FileSystem.Directory,
-      File: FileSystem.File,
-      Paths: FileSystem.Paths,
-    }));
-  }
-  return nativeModulesPromise;
-};
-
 const isNativeModuleMissing = (error) => {
   const msg = String(error?.message ?? error ?? '');
-  return msg.includes('ExpoDocumentPicker') || msg.includes('Cannot find native module');
+  return (
+    msg.includes('ExpoDocumentPicker') ||
+    msg.includes('ExpoFileSystem') ||
+    msg.includes('Cannot find native module') ||
+    msg.includes('Requiring unknown module')
+  );
 };
 
-const getWorkDocumentsDirectory = (workId, { Directory, Paths }) => {
+const getWorkDocumentsDirectory = (workId) => {
   const dir = new Directory(Paths.document, 'app_documents', `work_${workId}`);
   if (!dir.exists) {
     dir.create({ intermediates: true });
@@ -107,8 +96,8 @@ const getWorkDocumentsDirectory = (workId, { Directory, Paths }) => {
   return dir;
 };
 
-const copyToWorkStorage = (sourceUri, workId, storedFileName, { Directory, File, Paths }) => {
-  const workDir = getWorkDocumentsDirectory(workId, { Directory, Paths });
+const copyToWorkStorage = (sourceUri, workId, storedFileName) => {
+  const workDir = getWorkDocumentsDirectory(workId);
   const source = new File(sourceUri);
   const destination = new File(workDir, storedFileName);
 
@@ -131,7 +120,6 @@ const validatePickedAsset = (asset) => {
 
   const mime = (asset.mimeType || '').toLowerCase();
   if (mime && !ALLOWED_MIME_TYPES.includes(mime) && mime !== 'image/jpg') {
-    // Extension is authoritative; reject only clearly wrong MIME when present
     if (!mime.includes('pdf') && !mime.includes('jpeg') && !mime.includes('png')) {
       return {
         ok: false,
@@ -160,29 +148,9 @@ export const pickAndStoreDocument = async (workId, documentType) => {
 
   const defaultBasename = DOCUMENT_DEFAULT_BASENAMES[documentType] ?? 'document';
 
-  let DocumentPicker;
-  let Directory;
-  let File;
-  let Paths;
-
-  try {
-    ({ DocumentPicker, Directory, File, Paths } = await loadNativeModules());
-  } catch (e) {
-    console.warn('[documentUploadService] native modules unavailable:', e);
-    if (isNativeModuleMissing(e)) {
-      Alert.alert(
-        'Rebuild required',
-        'Document upload needs a fresh native build. Stop the app, then run:\n\nnpx expo run:android',
-      );
-    } else {
-      Alert.alert('Upload failed', 'Document picker is not available on this build.');
-    }
-    return null;
-  }
-
   let result;
   try {
-    result = await DocumentPicker.getDocumentAsync({
+    result = await getDocumentAsync({
       type: PICKER_TYPES,
       copyToCacheDirectory: true,
       multiple: false,
@@ -192,7 +160,7 @@ export const pickAndStoreDocument = async (workId, documentType) => {
     if (isNativeModuleMissing(e)) {
       Alert.alert(
         'Rebuild required',
-        'Stop the app, then run:\n\nnpx expo run:android',
+        'Document upload needs a native build. Stop the app, then run:\n\nnpx expo run:android',
       );
     } else {
       Alert.alert('Upload failed', 'Could not open the document picker.');
@@ -218,11 +186,7 @@ export const pickAndStoreDocument = async (workId, documentType) => {
   }
 
   try {
-    const filePath = copyToWorkStorage(asset.uri, workId, storedFileName, {
-      Directory,
-      File,
-      Paths,
-    });
+    const filePath = copyToWorkStorage(asset.uri, workId, storedFileName);
     const fileName = getFileNameFromPath(filePath);
 
     patchPath(workId, filePath);
@@ -231,7 +195,14 @@ export const pickAndStoreDocument = async (workId, documentType) => {
     return { filePath, fileName };
   } catch (e) {
     console.warn('[documentUploadService] store error:', e);
-    Alert.alert('Upload failed', 'Could not save the file on this device.');
+    if (isNativeModuleMissing(e)) {
+      Alert.alert(
+        'Rebuild required',
+        'Stop the app, then run:\n\nnpx expo run:android',
+      );
+    } else {
+      Alert.alert('Upload failed', 'Could not save the file on this device.');
+    }
     return null;
   }
 };
