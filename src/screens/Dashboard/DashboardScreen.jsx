@@ -3,8 +3,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import BudgetUtilisationCard from '../../components/dashboard/BudgetUtilisationCard';
-import { dashboardSectionLabelStyle } from '../../components/dashboard/dashboardTypography';
 import DashboardStatCard from '../../components/dashboard/DashboardStatCard';
+import { dashboardSectionLabelStyle } from '../../components/dashboard/dashboardTypography';
 import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
 import RecentWorkCard from '../../components/dashboard/RecentWorkCard';
 import SearchBar from '../../components/dashboard/SearchBar';

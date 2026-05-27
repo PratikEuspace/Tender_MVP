@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.pratik-69.Tender-Mvp"
+      "bundleIdentifier": "com.euspace.Tender",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -56,8 +57,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "c724e9fd-8faf-436d-9760-da2e70a4f634"
+        "projectId": "777c7a6a-2e88-4aec-a689-bca021b5647d"
       }
-    }
+    },
+    "owner": "euspacetech-2"
   }
 }

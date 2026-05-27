@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -6,6 +6,8 @@ import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
 import NotificationButton from '../../components/Notificationbutton';
 import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
+import { workCompletedToChipStatus } from '../../components/Statuschip';
+import useWorkStore from '../../store/useWorkStore';
 import theme from '../../theme';
 import ReportCategoryChipRow from '../../components/reports/ReportCategoryChipRow';
 import ReportStatCard from '../../components/reports/ReportStatCard';
@@ -19,9 +21,30 @@ import {
 } from '../../db/repositories/reportsRepository';
 
 const ReportsScreen = () => {
+  const { works, refreshWorks } = useWorkStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
   const [budgetSummary, setBudgetSummary] = useState(() => emptyBudgetSummary());
+
+  const workStats = useMemo(() => {
+    let completed = 0;
+    let inProgress = 0;
+    let pending = 0;
+
+    works.forEach((work) => {
+      const status = workCompletedToChipStatus(work.work_completed);
+      if (status === 'completed') completed += 1;
+      else if (status === 'progress') inProgress += 1;
+      else pending += 1;
+    });
+
+    return {
+      total: works.length,
+      completed,
+      inProgress,
+      pending,
+    };
+  }, [works]);
 
   const loadBudgetSummary = useCallback(() => {
     try {
@@ -34,8 +57,9 @@ const ReportsScreen = () => {
 
   useFocusEffect(
     useCallback(() => {
+      refreshWorks();
       loadBudgetSummary();
-    }, [loadBudgetSummary]),
+    }, [refreshWorks, loadBudgetSummary]),
   );
 
   useEffect(() => {
@@ -70,14 +94,14 @@ const ReportsScreen = () => {
         <View style={styles.statsRow}>
           <ReportStatCard
             variant="total"
-            value="34"
+            value={String(workStats.total)}
             title="Total Works"
             subtitle="+4 from last year"
           />
           <View style={styles.statsGap} />
           <ReportStatCard
             variant="completed"
-            value="12"
+            value={String(workStats.completed)}
             title="Completed"
             subtitle="58% completed rate"
           />
@@ -86,14 +110,14 @@ const ReportsScreen = () => {
         <View style={styles.statsRow}>
           <ReportStatCard
             variant="inProgress"
-            value="20"
+            value={String(workStats.inProgress)}
             title="In Progress"
             subtitle="Target: complete by Aug"
           />
           <View style={styles.statsGap} />
           <ReportStatCard
             variant="pending"
-            value="02"
+            value={String(workStats.pending)}
             title="Pending"
             subtitle="Needs attention"
           />

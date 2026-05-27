@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#D0D5DD',
     backgroundColor: '#FFFFFF',
+    marginLeft: 6,
     marginRight: 8,
   },
   chipSelected: {
