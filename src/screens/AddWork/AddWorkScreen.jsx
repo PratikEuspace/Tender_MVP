@@ -3,22 +3,18 @@
 // Entry point of the Tender Workflow System.
 // Lists all workflow steps as tappable NavigationCards.
 //
-// Workflow gating logic:
-//   workflow_step in SQLite tracks the highest completed step.
-//   Each card derives its state from currentWork.workflow_step:
-//     completed → step.id <  workflow_step  (already saved)
-//     active    → step.id === workflow_step  (current step)
-//     locked    → step.id >  workflow_step  (not yet unlocked)
-//
-//   NavigationCard receives disabled={locked} to prevent tapping.
-//   A status badge (✓ / lock icon) is shown on each card's left side.
+// Card state from works.workflow_step (see deriveStepStatus):
+//   completed — step saved via Save & Continue (green check)
+//   pending   — current step, not yet advanced (yellow indicator)
+//   locked    — future steps (grey lock, not tappable)
 
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import ScreenLayout   from '../../components/layouts/Screenlayout';
+import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
 import SettingsDrawer from '../../components/Settingsdrawer';
+import WorkflowStepBadge from '../../components/workflow/WorkflowStepBadge';
 
 import useWorkStore from '../../store/useWorkStore';
 import useDraftStore from '../../store/useDraftStore';
@@ -37,71 +33,6 @@ import {
   WORKFLOW_ALL_COMPLETE_STEP,
 } from '../../constants/WorkflowSteps';
 
-// ─── Badge icons (pure Views, no icon lib) ────────────────────────────────────
-
-const CheckBadge = () => (
-  <View style={badge.circle}>
-    <View style={badge.tick} />
-  </View>
-);
-
-const LockBadge = () => (
-  <View style={badge.lockWrap}>
-    <View style={badge.lockBody} />
-    <View style={badge.lockShackle} />
-  </View>
-);
-
-const badge = StyleSheet.create({
-  // ── Check badge ──────────────────────────────────────────────────────────
-  circle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#1D6B43',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tick: {
-    width: 9,
-    height: 5,
-    borderLeftWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: '#FFFFFF',
-    transform: [{ rotate: '-45deg' }],
-    marginTop: -2,
-  },
-
-  // ── Lock badge ────────────────────────────────────────────────────────────
-  lockWrap: {
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  lockBody: {
-    width: 11,
-    height: 8,
-    borderRadius: 2,
-    backgroundColor: '#AAAAAA',
-    position: 'absolute',
-    bottom: 3,
-  },
-  lockShackle: {
-    width: 7,
-    height: 6,
-    borderWidth: 2,
-    borderColor: '#AAAAAA',
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    position: 'absolute',
-    top: 3,
-  },
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-
 const AddWorkScreen = ({ navigation }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -109,8 +40,6 @@ const AddWorkScreen = ({ navigation }) => {
     useWorkStore();
   const clearAllDrafts = useDraftStore((state) => state.clearAllDrafts);
 
-  // Refresh currentWork from SQLite every time this screen is focused.
-  // Covers the case where user completes a step and presses Back.
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       refreshCurrentWork();
@@ -119,6 +48,10 @@ const AddWorkScreen = ({ navigation }) => {
   }, [navigation, refreshCurrentWork]);
 
   const workflowStep = currentWork?.workflow_step ?? 1;
+  const effectiveWorkflowStep =
+    workflowStep >= WORKFLOW_ALL_COMPLETE_STEP
+      ? WORKFLOW_ALL_COMPLETE_STEP
+      : workflowStep;
 
   const handleStartNewWork = () => {
     clearCurrentWork();
@@ -154,25 +87,18 @@ const AddWorkScreen = ({ navigation }) => {
 
         <View style={styles.cardList}>
           {WORKFLOW_STEPS.map((step) => {
-            const effectiveWorkflowStep =
-              workflowStep >= WORKFLOW_ALL_COMPLETE_STEP
-                ? WORKFLOW_ALL_COMPLETE_STEP
-                : workflowStep;
             const status = deriveStepStatus(step.id, effectiveWorkflowStep);
-            const isLocked    = status === 'locked';
-            const isCompleted = status === 'completed';
+            const isLocked = status === 'locked';
+            const isPending = status === 'pending';
 
             return (
               <NavigationCard
                 key={step.id}
                 title={step.title}
                 disabled={isLocked}
+                emphasis={isPending ? 'pending' : 'none'}
                 onPress={() => handleStepPress(step, status)}
-                leftIcon={
-                  isCompleted ? <CheckBadge /> :
-                  isLocked    ? <LockBadge />  :
-                  null
-                }
+                leftIcon={<WorkflowStepBadge status={status} />}
               />
             );
           })}
@@ -187,13 +113,12 @@ const AddWorkScreen = ({ navigation }) => {
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   heroTitle: {
     fontFamily: FontFamily.bold,
     fontWeight: FontWeight.bold,
-    fontSize:   18,
-    color:      Colors.textInverse,
+    fontSize: 18,
+    color: Colors.textInverse,
     letterSpacing: 0.2,
   },
   scrollContent: {

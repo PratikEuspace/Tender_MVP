@@ -1,7 +1,7 @@
 // src/screens/AddWork/workflow/WorkDetailsScreen.jsx
 // Step 1 of 10: Work Details
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -43,11 +43,20 @@ const WorkDetailsScreen = ({ navigation }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const { bindForm, scheduleDebouncedSave, saveImmediately } = useWorkflowAutoSave('workDetails');
 
+  // Hydrate from SQLite/draft only on the first effect run for this mount.
+  // After that the form is the source of truth — autosave creating the work
+  // row (which sets currentWorkId) must not re-hydrate and overwrite fields
+  // the user is currently typing (e.g. budget defaulting back to "0").
+  const didHydrateRef = useRef(false);
+
   useEffect(() => {
     bindForm(form);
   }, [form, bindForm]);
 
   useEffect(() => {
+    if (didHydrateRef.current) return;
+    didHydrateRef.current = true;
+
     if (currentWorkId) {
       try {
         const work = getWorkById(currentWorkId);
@@ -156,6 +165,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Work Code"
           placeholder="eg. ERK-2025-0001"
+          type="alphanumeric"
           value={form.work_code}
           onChangeText={(v) => updateField('work_code', v)}
         />
@@ -163,6 +173,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Work Name"
           placeholder="Enter the full name"
+          type="textOnly"
           value={form.work_name}
           onChangeText={(v) => updateField('work_name', v)}
         />
@@ -179,6 +190,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Financial Year"
           placeholder="e.g. FY 2025-26"
+          type="alphanumeric"
           value={form.financial_year}
           onChangeText={(v) => updateField('financial_year', v)}
         />
@@ -186,6 +198,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Ward"
           placeholder="Enter ward"
+          type="alphanumeric"
           value={form.ward}
           onChangeText={(v) => updateField('ward', v)}
         />
@@ -193,6 +206,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Department"
           placeholder="Enter department"
+          type="textOnly"
           value={form.department}
           onChangeText={(v) => updateField('department', v)}
         />
@@ -200,6 +214,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Sub Department"
           placeholder="Enter sub department"
+          type="textOnly"
           value={form.sub_department}
           onChangeText={(v) => updateField('sub_department', v)}
         />
@@ -207,6 +222,7 @@ const WorkDetailsScreen = ({ navigation }) => {
         <Inputboxfield
           label="Officer"
           placeholder="Enter officer name"
+          type="textOnly"
           value={form.officer}
           onChangeText={(v) => updateField('officer', v)}
         />

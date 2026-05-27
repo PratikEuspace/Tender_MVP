@@ -178,9 +178,10 @@ const EstimationScreen = ({ navigation }) => {
             <Inputboxfield
               label="Estimated Cost (₹)"
               placeholder="Enter estimated cost"
+              type="number"
+              keyboardType="numeric"
               value={form.estimated_cost}
               onChangeText={(v) => updateField('estimated_cost', v)}
-              keyboardType="numeric"
             />
 
             <Inputboxfield

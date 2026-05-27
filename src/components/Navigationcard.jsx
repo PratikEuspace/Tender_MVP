@@ -27,6 +27,8 @@ const ChevronRight = ({ size = 11, color = '#555555', strokeWidth = 2.5 }) => (
 );
 
 // ─── Component ────────────────────────────────────────────────────────────────
+const PENDING_ACCENT = '#F4B400';
+
 const NavigationCard = ({
   title,
   subtitle = null,
@@ -37,6 +39,8 @@ const NavigationCard = ({
   style,
   leftIcon = null,
   rightIcon,
+  /** 'pending' — subtle highlight for the active workflow step */
+  emphasis = 'none',
 }) => {
   const hasSubtitle = subtitle != null && subtitle !== '';
 
@@ -77,6 +81,7 @@ const NavigationCard = ({
   const cardStyle = [
     styles.card,
     hasSubtitle && styles.cardWithSubtitle,
+    emphasis === 'pending' && styles.cardPending,
     disabled && styles.disabled,
     style,
   ];
@@ -168,6 +173,12 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.45,
+  },
+  cardPending: {
+    // borderColor: PENDING_ACCENT,
+    backgroundColor: '#FFFBF0',
+    shadowColor: PENDING_ACCENT,
+    shadowOpacity: 0.12,
   },
 });
 

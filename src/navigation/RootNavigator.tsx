@@ -22,6 +22,7 @@
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
+import { Platform } from 'react-native';
 
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ActivationScreen from '../screens/splash/Activationscreen';
@@ -48,7 +49,19 @@ const RootNavigator = () => (
       <Root.Screen name="Activation" component={ActivationScreen} />
 
       {/* ── Main app ────────────────────────────────────────────────────────── */}
-      <Root.Screen name="MainApp" component={BottomTabNavigator} />
+      <Root.Screen
+        name="MainApp"
+        component={BottomTabNavigator}
+        options={
+          Platform.OS === 'ios'
+            ? {
+                // Navy behind status-bar inset only — do not set statusBarStyle here;
+                // ScreenLayout uses RN StatusBar, which requires UIViewControllerBasedStatusBarAppearance=NO.
+                contentStyle: { backgroundColor: Colors.primary },
+              }
+            : undefined
+        }
+      />
     </Root.Navigator>
   </SafeAreaProvider>
 );

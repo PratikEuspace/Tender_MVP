@@ -144,6 +144,7 @@ const WorkOrderScreen = ({ navigation }) => {
         <Inputboxfield
           label="Work order number"
           placeholder="DKT 005-2035"
+          type="alphanumeric"
           value={form.work_order_number}
           onChangeText={(v) => updateField('work_order_number', v)}
         />

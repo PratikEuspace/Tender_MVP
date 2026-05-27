@@ -195,6 +195,7 @@ const ReTenderScreen = ({ navigation }) => {
               <Inputboxfield
                 label="Previous tender ref"
                 placeholder="e.g TND-2025-001"
+                type="alphanumeric"
                 value={form.previous_tender_reference}
                 onChangeText={(v) => updateField('previous_tender_reference', v)}
               />

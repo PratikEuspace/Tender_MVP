@@ -163,6 +163,7 @@ const TenderCreationScreen = ({ navigation }) => {
         <Inputboxfield
           label="Tender name"
           placeholder="Enter the tender name"
+          type="textOnly"
           value={form.tender_name}
           onChangeText={(v) => updateField('tender_name', v)}
         />
@@ -170,6 +171,7 @@ const TenderCreationScreen = ({ navigation }) => {
         <Inputboxfield
           label="Tender number"
           placeholder="e.g TND-2025-001"
+          type="alphanumeric"
           value={form.tender_number}
           onChangeText={(v) => updateField('tender_number', v)}
         />

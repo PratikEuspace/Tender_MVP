@@ -146,6 +146,7 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
             <Inputboxfield
               label="Bill number"
               placeholder="Bill number"
+              type="alphanumeric"
               value={form.bill_number}
               onChangeText={(v) => updateField('bill_number', v)}
             />

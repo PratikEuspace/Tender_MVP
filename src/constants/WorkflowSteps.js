@@ -134,10 +134,16 @@ export const getNextRoute = (currentRoute) => {
   return WORKFLOW_STEPS[idx + 1].route;
 };
 
+/**
+ * Card state for Add Work hub from works.workflow_step:
+ *   completed — Save & Continue done for that step (step.id < workflow_step)
+ *   pending   — current unlocked step, not yet advanced (step.id === workflow_step)
+ *   locked    — not reachable yet (step.id > workflow_step)
+ */
 export const deriveStepStatus = (stepId, workflowStep) => {
   const current = Number(workflowStep) || 1;
   if (stepId < current) return 'completed';
-  if (stepId === current) return 'active';
+  if (stepId === current) return 'pending';
   return 'locked';
 };
 

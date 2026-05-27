@@ -1,12 +1,77 @@
 // src/db/repositories/paymentsRepository.js
 //
-//   import { getDB } from '../database'
-//   db.runSync() / db.getFirstSync()
+// Payments are a ledger: each Save & Continue on the Payment Status screen
+// appends a new installment row. The screen displays SUM(amount_paid) as
+// Amount Paid and lists rows as Payment History.
 //
 // DB schema (payments table):
-//   id, work_id, paid, payment_date, amount_paid
+//   id, work_id, paid, payment_date, amount_paid, payment_receipt_path
+//
+// Legacy single-row API (upsertPayment / getPaymentByWorkId) is retained for
+// callers that pre-date the ledger model. New code uses
+// appendPaymentInstallment + getPaymentInstallmentsForWork.
 
 import { getDB } from '../database';
+
+/** INSERT a new installment row. Returns the new row id. */
+export const appendPaymentInstallment = (workId, data = {}) => {
+  if (!workId) throw new Error('appendPaymentInstallment: workId is required');
+
+  const {
+    amount_paid = null,
+    payment_date = null,
+    payment_receipt_path = null,
+    payment_pdf_path = null,
+  } = data;
+
+  const amountValue = amount_paid
+    ? parseFloat(String(amount_paid).replace(/[^0-9.]/g, ''))
+    : null;
+
+  if (!amountValue || amountValue <= 0) {
+    throw new Error('appendPaymentInstallment: amount_paid must be positive');
+  }
+
+  const receiptPath = payment_receipt_path ?? payment_pdf_path ?? null;
+  const db = getDB();
+
+  const result = db.runSync(
+    `INSERT INTO payments
+       (work_id, paid, payment_date, amount_paid, payment_receipt_path)
+     VALUES (?, 1, ?, ?, ?);`,
+    [workId, payment_date || null, amountValue, receiptPath],
+  );
+
+  return result?.lastInsertRowId ?? null;
+};
+
+/**
+ * All installment rows for a work, ordered by payment_date asc, then created_at.
+ * Excludes empty seed rows (no amount_paid).
+ */
+export const getPaymentInstallmentsForWork = (workId) => {
+  if (!workId) return [];
+
+  const db = getDB();
+  return db.getAllSync(
+    `SELECT id, work_id, paid, payment_date, amount_paid, payment_receipt_path, created_at
+     FROM payments
+     WHERE work_id = ?
+       AND amount_paid IS NOT NULL
+       AND amount_paid > 0
+     ORDER BY
+       CASE
+         WHEN payment_date LIKE '__/__/____'
+         THEN substr(payment_date, 7, 4) || '-' ||
+              substr(payment_date, 4, 2) || '-' ||
+              substr(payment_date, 1, 2)
+         ELSE payment_date
+       END ASC,
+       created_at ASC,
+       id ASC;`,
+    [workId],
+  );
+};
 
 export const upsertPayment = (workId, data) => {
   if (!workId) throw new Error('upsertPayment: workId is required');
@@ -88,7 +153,8 @@ export const getPaymentByWorkId = (workId) => {
   return row ?? null;
 };
 
-// Best available total for Payment Status summary (sanction → tender → work budget)
+// Best available total for Payment Status summary (sanction → tender → work budget).
+// Amount Paid is the SUM across all installments.
 export const getPaymentSummaryForWork = (workId) => {
   if (!workId) {
     return { totalBill: 0, amountPaid: 0, pending: 0 };
@@ -108,7 +174,12 @@ export const getPaymentSummaryForWork = (workId) => {
     'SELECT sanction_amount FROM sanctions WHERE work_id = ? ORDER BY id DESC LIMIT 1;',
     [workId],
   );
-  const payment = getPaymentByWorkId(workId);
+  const paidRow = db.getFirstSync(
+    `SELECT COALESCE(SUM(amount_paid), 0) AS total_paid
+     FROM payments
+     WHERE work_id = ? AND amount_paid IS NOT NULL AND amount_paid > 0;`,
+    [workId],
+  );
 
   const totalBill =
     sanction?.sanction_amount ??
@@ -116,7 +187,7 @@ export const getPaymentSummaryForWork = (workId) => {
     work?.budget ??
     0;
 
-  const amountPaid = payment?.amount_paid ?? 0;
+  const amountPaid = paidRow?.total_paid ?? 0;
   const pending = Math.max(0, Number(totalBill) - Number(amountPaid));
 
   return {

@@ -158,6 +158,7 @@ const PmcApprovalScreen = ({ navigation }) => {
           <Inputboxfield
             label="Letter Number"
             placeholder="eg. ERK-2025-0001"
+            type="alphanumeric"
             value={form.letter_number}
             onChangeText={(v) => updateField('letter_number', v)}
           />
@@ -194,6 +195,7 @@ const PmcApprovalScreen = ({ navigation }) => {
             <Inputboxfield
               label="Finance Approval Status"
               placeholder="e.g. Pending, Approved, Rejected"
+              type="textOnly"
               value={form.finance_approval_status}
               onChangeText={(v) => updateField('finance_approval_status', v)}
             />

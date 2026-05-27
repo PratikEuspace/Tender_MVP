@@ -45,7 +45,13 @@ const WORK_BUDGET_ROWS_SQL = `
     w.budget AS work_budget,
     w.financial_year,
     s.sanction_amount,
-    pay.amount_paid,
+    (
+      SELECT COALESCE(SUM(amount_paid), 0)
+      FROM payments
+      WHERE work_id = w.id
+        AND amount_paid IS NOT NULL
+        AND amount_paid > 0
+    ) AS amount_paid,
     est.estimated_cost,
     tend.tender_amount,
     cont.final_tender_amount,
@@ -53,7 +59,6 @@ const WORK_BUDGET_ROWS_SQL = `
     ret.new_tender_amount
   FROM works w
   LEFT JOIN sanctions s ON s.work_id = w.id
-  LEFT JOIN payments pay ON pay.work_id = w.id
   LEFT JOIN estimations est ON est.work_id = w.id
   LEFT JOIN retenders ret ON ret.work_id = w.id
   LEFT JOIN tenders tend ON tend.id = (

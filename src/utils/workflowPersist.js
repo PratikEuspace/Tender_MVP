@@ -8,7 +8,9 @@ import { upsertBillSubmission } from '../db/repositories/billSubmissionRepositor
 import { upsertCompletionClosure } from '../db/repositories/completionClosureRepository';
 import { upsertContractorAssignment } from '../db/repositories/contractorRepository';
 import { upsertEstimation } from '../db/repositories/estimationsRepository';
-import { upsertPayment } from '../db/repositories/paymentsRepository';
+// paymentStatus is a ledger of installments — appended only on Save & Continue,
+// so auto-save intentionally does not persist the in-progress form to SQLite.
+// import { upsertPayment } from '../db/repositories/paymentsRepository';
 import { upsertReTender } from '../db/repositories/retendersRepository';
 import { upsertSanction } from '../db/repositories/sanctionsRepository';
 import { upsertTender } from '../db/repositories/tendersRepository';
@@ -85,8 +87,10 @@ export const persistWorkflowStep = (screenKey, workId, formData) => {
       return upsertWorkProgress(workId, formData);
 
     case 'paymentStatus':
-      if (!workId) return null;
-      return upsertPayment(workId, formData);
+      // Auto-save no-op: a new payment row should only be created via
+      // Save & Continue (see BillSubmissionScreen handleSave). Returning
+      // workId keeps the auto-save hook happy without writing to SQLite.
+      return workId ?? null;
 
     case 'billSubmission':
       if (!workId) return null;

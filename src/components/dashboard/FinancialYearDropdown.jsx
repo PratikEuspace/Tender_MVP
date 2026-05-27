@@ -44,14 +44,24 @@ const FinancialYearDropdown = ({
     [],
   );
 
+  const isIos = Platform.OS === 'ios';
+
   return (
-    <View style={[styles.wrap, isOpen && styles.wrapOpen, style]}>
+    <View
+      style={[
+        styles.wrap,
+        isOpen && styles.wrapOpen,
+        isIos && iosStyles.wrap,
+        style,
+      ]}
+    >
       <ElementDropdown
-        style={styles.pillDropdown}
+        style={[styles.pillDropdown, isIos && iosStyles.pillDropdown]}
         containerStyle={styles.menuContainer}
         itemContainerStyle={styles.itemContainer}
-        selectedTextStyle={styles.selectedText}
-        placeholderStyle={styles.selectedText}
+        selectedTextStyle={[styles.selectedText, isIos && iosStyles.selectedText]}
+        placeholderStyle={[styles.selectedText, isIos && iosStyles.selectedText]}
+        selectedTextProps={isIos ? iosSelectedTextProps : undefined}
         activeColor="rgba(6, 46, 82, 0.08)"
         data={options}
         labelField="label"
@@ -79,6 +89,25 @@ const FinancialYearDropdown = ({
     </View>
   );
 };
+
+/** iOS-only — single line; Android never uses this. */
+const iosSelectedTextProps = { numberOfLines: 1 };
+
+const iosStyles = StyleSheet.create({
+  wrap: {
+    maxWidth: 152,
+    flexShrink: 0,
+  },
+  pillDropdown: {
+    minWidth: 118,
+  },
+  // Library merges textItem { flex: 1 }. flexGrow/flexShrink: 0 collapsed width to 0 on iOS.
+  selectedText: {
+    flex: 1,
+    minWidth: 0,
+    lineHeight: 14,
+  },
+});
 
 const styles = StyleSheet.create({
   wrap: {

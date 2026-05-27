@@ -1,6 +1,8 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme';
 
 import DashboardScreen   from '../screens/Dashboard/DashboardScreen';
@@ -14,8 +16,36 @@ const Tab = createBottomTabNavigator();
 const TAB_BAR_BG = Colors.primary ?? '#062E52';
 
 const BottomTabNavigator = () => {
+  const insets = useSafeAreaInsets();
+
+  const androidTabBarStyle = {
+    height: 72,
+    paddingBottom: 10,
+    paddingTop: 8,
+    backgroundColor: TAB_BAR_BG,
+    borderTopWidth: 0,
+    elevation: 8,
+  };
+
+  // iOS: do not pass safeAreaInsets to tab bar (0) so the bar sits on the physical
+  // bottom edge; height + paddingBottom must include the home-indicator inset.
+  const iosTabBarStyle = {
+    height: 72 + insets.bottom,
+    // Avoid double-counting the home-indicator inset: `height` already includes it.
+    paddingBottom: 10,
+    paddingTop: 8,
+    backgroundColor: TAB_BAR_BG,
+    borderTopWidth: 0,
+    elevation: 8,
+  };
+
   return (
     <Tab.Navigator
+      safeAreaInsets={
+        Platform.OS === 'ios'
+          ? { top: 0, right: 0, bottom: 0, left: 0 }
+          : undefined
+      }
       screenOptions={({ route }) => ({
         headerShown: false,
         sceneContainerStyle: { backgroundColor: Colors.bgScreen },
@@ -27,14 +57,8 @@ const BottomTabNavigator = () => {
           fontWeight: '500',
           marginBottom: 2,
         },
-        tabBarStyle: {
-          height: 72,
-          paddingBottom: 10,
-          paddingTop: 8,
-          backgroundColor: TAB_BAR_BG,
-          borderTopWidth: 0,
-          elevation: 8,
-        },
+        tabBarStyle:
+          Platform.OS === 'ios' ? iosTabBarStyle : androidTabBarStyle,
         tabBarIcon: ({ color, size, focused }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'grid-outline';
           let iconSize = size;

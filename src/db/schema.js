@@ -225,36 +225,50 @@ const MIGRATIONS = [
 ];
 
 // ─── Additive column migrations (run after table creation) ────────────────────
-// Each entry is wrapped in its own try/catch — SQLite throws if column already
-// exists, which is the normal case for users who reinstall or re-run migrations.
+// Each ALTER is gated on a PRAGMA table_info() check so SQLite never emits a
+// "duplicate column" error to the iOS native log on subsequent launches.
+// End-state schema, ordering, and behaviour are identical to before.
 // ORDER MATTERS: never remove or reorder existing entries.
 const runColumnMigrations = (db) => {
-  const columnMigrations = [
-    // v1 — existing
-    `ALTER TABLE estimations ADD COLUMN estimation_date TEXT;`,
-    `ALTER TABLE sanctions ADD COLUMN sanction_amount      REAL;`,
-    `ALTER TABLE sanctions ADD COLUMN sanction_letter_path TEXT;`,
-    // v2 — PMC finance dropdown (was incorrectly written to finance_approved INTEGER)
-    `ALTER TABLE approvals ADD COLUMN finance_status TEXT;`,
-    // v3 — Contractor % above/below estimate direction
-    `ALTER TABLE contractors ADD COLUMN percentage_above_below TEXT;`,
-    // v4 — Contractor contact + final tender amount
-    `ALTER TABLE contractors ADD COLUMN contractor_contact TEXT;`,
-    `ALTER TABLE contractors ADD COLUMN final_tender_amount REAL;`,
-    // v5 — Payment Status document path
-    `ALTER TABLE payments ADD COLUMN payment_receipt_path TEXT;`,
-    // v6 — one retenders row per work
+  const addColumnIfMissing = (table, column, definition) => {
+    try {
+      const rows = db.getAllSync(`PRAGMA table_info(${table});`);
+      const exists = Array.isArray(rows) && rows.some((row) => row && row.name === column);
+      if (!exists) {
+        db.runSync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`);
+      }
+    } catch (_) {
+      // Defensive — never block startup if PRAGMA or ALTER unexpectedly fails.
+    }
+  };
+
+  // v1 — existing
+  addColumnIfMissing('estimations', 'estimation_date', 'TEXT');
+  addColumnIfMissing('sanctions', 'sanction_amount', 'REAL');
+  addColumnIfMissing('sanctions', 'sanction_letter_path', 'TEXT');
+  // v2 — PMC finance dropdown (was incorrectly written to finance_approved INTEGER)
+  addColumnIfMissing('approvals', 'finance_status', 'TEXT');
+  // v3 — Contractor % above/below estimate direction
+  addColumnIfMissing('contractors', 'percentage_above_below', 'TEXT');
+  // v4 — Contractor contact + final tender amount
+  addColumnIfMissing('contractors', 'contractor_contact', 'TEXT');
+  addColumnIfMissing('contractors', 'final_tender_amount', 'REAL');
+  // v5 — Payment Status document path
+  addColumnIfMissing('payments', 'payment_receipt_path', 'TEXT');
+
+  // v6 — UNIQUE indexes (IF NOT EXISTS keeps these silent on every launch).
+  const indexStatements = [
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_retenders_work_id ON retenders(work_id);`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_work_orders_work_id ON work_orders(work_id);`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_work_progress_work_id ON work_progress(work_id);`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_bill_submissions_work_id ON bill_submissions(work_id);`,
   ];
 
-  columnMigrations.forEach((sql) => {
+  indexStatements.forEach((sql) => {
     try {
       db.runSync(sql);
     } catch (_) {
-      // Column already exists on this device — expected, safe to ignore
+      // Should never trigger — IF NOT EXISTS guards each statement.
     }
   });
 };

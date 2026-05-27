@@ -159,6 +159,7 @@ const SanctionApprovalScreen = ({ navigation }) => {
         <Inputboxfield
           label="Docket number"
           placeholder="DKT 005-2035"
+          type="alphanumeric"
           value={form.docket_number}
           onChangeText={(v) => updateField('docket_number', v)}
         />
@@ -167,6 +168,7 @@ const SanctionApprovalScreen = ({ navigation }) => {
         <Inputboxfield
           label="Sanction amount (₹)"
           placeholder="₹0.00"
+          type="number"
           value={form.sanction_amount}
           onChangeText={(v) => updateField('sanction_amount', v)}
           keyboardType="decimal-pad"

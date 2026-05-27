@@ -14,6 +14,7 @@ import {
   FORM_FIELD_BORDER_WIDTH,
 } from '../theme/formFieldStyles';
 import { dismissKeyboardBeforeOverlay } from '../utils/keyboardDismiss';
+import { sanitizeForInputType } from '../utils/inputSanitize';
 
 const ChevronDown = ({ size = 11, color = '#888888' }) => (
   <View style={{ width: size * 1.4, height: size, justifyContent: 'center', alignItems: 'center' }}>
@@ -32,12 +33,15 @@ const ChevronDown = ({ size = 11, color = '#888888' }) => (
 );
 
 const KEYBOARD_MAP = {
-  text:     'default',
-  number:   'numeric',
-  email:    'email-address',
-  phone:    'phone-pad',
-  date:     'default',
-  dropdown: 'default',
+  text:           'default',
+  textOnly:       'default',
+  alphanumeric:   'default',
+  number:         'numeric',
+  decimal:        'decimal-pad',
+  email:          'email-address',
+  phone:          'phone-pad',
+  date:           'default',
+  dropdown:       'default',
 };
 
 const SINGLE_LINE_INPUT_HEIGHT =
@@ -80,6 +84,15 @@ const InputBoxField = forwardRef(({
 
   const resolvedKeyboard = keyboardType ?? KEYBOARD_MAP[type] ?? 'default';
 
+  const handleChangeText = (text) => {
+    if (!onChangeText) return;
+    const next =
+      isTouchable || isDate
+        ? text
+        : sanitizeForInputType(type, text);
+    onChangeText(next);
+  };
+
   const controlStyle = [
     formFieldStyles.control,
     error ? formFieldStyles.controlError : null,
@@ -108,7 +121,7 @@ const InputBoxField = forwardRef(({
       value={value}
       placeholder={placeholder}
       placeholderTextColor={theme.Colors?.inputPlaceholder ?? '#AAAAAA'}
-      onChangeText={onChangeText}
+      onChangeText={handleChangeText}
       keyboardType={resolvedKeyboard}
       secureTextEntry={secureTextEntry}
       editable={!isTouchable && !isDisabled}

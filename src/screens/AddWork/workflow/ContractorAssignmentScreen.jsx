@@ -178,6 +178,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
         <Inputboxfield
           label="Contractor name"
           placeholder="Enter full name"
+          type="textOnly"
           value={form.contractor_name}
           onChangeText={(v) => updateField('contractor_name', v)}
         />
@@ -215,8 +216,8 @@ const ContractorAssignmentScreen = ({ navigation }) => {
             <Inputboxfield
               placeholder="0.00"
               value={form.percentage_variation}
-              type="number"
-              keyboardType="numeric"
+              type="decimal"
+              keyboardType="decimal-pad"
               onChangeText={(v) => updateField('percentage_variation', v)}
               rightIcon={<Text style={styles.percentSuffix}>%</Text>}
               containerStyle={styles.noMargin}
