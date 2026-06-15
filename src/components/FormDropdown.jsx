@@ -20,6 +20,7 @@ import {
   FORM_FIELD_TEXT_COLOR,
   formFieldStyles,
 } from '../theme/formFieldStyles';
+import useAdaptiveDropdownPosition from '../hooks/useAdaptiveDropdownPosition';
 import {
   dismissKeyboardAfterClose,
   dismissKeyboardBeforeOverlay,
@@ -89,11 +90,23 @@ const FormDropdown = ({
   const items = safeData(data);
   const hasError = Boolean(error);
   const [isOpen, setIsOpen] = useState(false);
+  const useAdaptivePosition = dropdownPosition === 'auto';
+  const adaptive = useAdaptiveDropdownPosition({
+    preferredMaxHeight: maxHeight,
+  });
+
+  const resolvedDropdownPosition = useAdaptivePosition
+    ? adaptive.dropdownPosition
+    : dropdownPosition;
+  const resolvedMaxHeight = useAdaptivePosition ? adaptive.maxHeight : maxHeight;
 
   const handleFocus = useCallback(() => {
+    if (useAdaptivePosition) {
+      adaptive.onDropdownFocus();
+    }
     setIsOpen(true);
     dismissKeyboardBeforeOverlay();
-  }, []);
+  }, [useAdaptivePosition, adaptive.onDropdownFocus]);
 
   const handleBlur = useCallback(() => {
     setIsOpen(false);
@@ -131,7 +144,10 @@ const FormDropdown = ({
       hasError && styles.dropdownError,
       disabled && styles.dropdownDisabled,
     ],
-    containerStyle: styles.menuContainer,
+    containerStyle: [
+      styles.menuContainer,
+      resolvedDropdownPosition === 'top' && styles.menuContainerUp,
+    ],
     itemContainerStyle: styles.itemContainer,
     selectedTextStyle: styles.selectedText,
     placeholderStyle: styles.placeholderText,
@@ -139,8 +155,8 @@ const FormDropdown = ({
     data: items,
     labelField,
     valueField,
-    dropdownPosition,
-    maxHeight,
+    dropdownPosition: resolvedDropdownPosition,
+    maxHeight: resolvedMaxHeight,
     zIndex: isOpen ? 3000 : 1,
     iconStyle: styles.hiddenIcon,
     renderRightIcon,
@@ -207,7 +223,13 @@ const FormDropdown = ({
           helpTooltipId={helpTooltipId}
         />
       ) : null}
-      {fieldControl}
+      <View
+        ref={useAdaptivePosition ? adaptive.triggerRef : undefined}
+        onLayout={useAdaptivePosition ? adaptive.onTriggerLayout : undefined}
+        collapsable={false}
+      >
+        {fieldControl}
+      </View>
       {error ? <Text style={formFieldStyles.errorText}>{error}</Text> : null}
     </View>
   );
@@ -253,6 +275,10 @@ const styles = StyleSheet.create({
       android: { elevation: 8 },
       default: {},
     }),
+  },
+  menuContainerUp: {
+    marginTop: 0,
+    marginBottom: 4,
   },
   itemContainer: {
     borderRadius: 8,

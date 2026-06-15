@@ -1,4 +1,4 @@
-import React, { forwardRef, useRef } from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import {
   View,
   Text,
@@ -73,6 +73,11 @@ const InputBoxField = forwardRef(({
   containerStyle,
 }, ref) => {
   const inputRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    blur: () => inputRef.current?.blur(),
+    focus: () => inputRef.current?.focus(),
+  }));
 
   const isDropdown  = type === 'dropdown';
   const isDate      = type === 'date';
@@ -179,7 +184,7 @@ const InputBoxField = forwardRef(({
         />
       ) : null}
 
-      <View ref={ref} collapsable={false}>
+      <View collapsable={false}>
         {controlElement}
       </View>
 

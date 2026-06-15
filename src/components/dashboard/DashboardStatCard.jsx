@@ -11,7 +11,25 @@ const ProgressRing = ({
   trackColor = '#E5E7EB',
 }) => {
   const half = size / 2;
-  const deg = (Math.min(Math.max(percent, 0), 100) / 100) * 360;
+  const clampedPercent = Math.min(Math.max(percent, 0), 100);
+
+  if (clampedPercent <= 0) {
+    return (
+      <View style={{ width: size, height: size }}>
+        <View
+          style={{
+            width: size,
+            height: size,
+            borderRadius: half,
+            borderWidth: strokeWidth,
+            borderColor: trackColor,
+          }}
+        />
+      </View>
+    );
+  }
+
+  const deg = (clampedPercent / 100) * 360;
   const rightDeg = Math.min(deg, 180);
   const leftDeg = Math.max(0, deg - 180);
 

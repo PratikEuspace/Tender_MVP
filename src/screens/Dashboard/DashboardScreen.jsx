@@ -128,7 +128,7 @@ const DashboardScreen = () => {
             value={String(dashboardStats.total)}
             percent={dashboardStats.totalPercent}
             ringColor="#9CA3AF"
-            trackColor="#D9EDE2"
+            trackColor={dashboardStats.total === 0 ? '#9CA3AF' : '#D9EDE2'}
           />
           <View style={styles.statsGap} />
           <DashboardStatCard

@@ -3,29 +3,31 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Dropdown as ElementDropdown } from 'react-native-element-dropdown';
 
+import { FINANCIAL_YEAR_HEADER_OPTIONS } from '../../constants/dropdownOptions';
+import useAdaptiveDropdownPosition from '../../hooks/useAdaptiveDropdownPosition';
 import {
   dismissKeyboardAfterClose,
   dismissKeyboardBeforeOverlay,
 } from '../../utils/keyboardDismiss';
 
-const DEFAULT_OPTIONS = [
-  { label: 'FY 2025-26', value: '2025-26' },
-  { label: 'FY 2024-25', value: '2024-25' },
-  { label: 'FY 2023-24', value: '2023-24' },
-];
+const FY_DROPDOWN_MAX_HEIGHT = 220;
 
 const FinancialYearDropdown = ({
   value = '2025-26',
   onChange,
-  options = DEFAULT_OPTIONS,
+  options = FINANCIAL_YEAR_HEADER_OPTIONS,
   style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const adaptive = useAdaptiveDropdownPosition({
+    preferredMaxHeight: FY_DROPDOWN_MAX_HEIGHT,
+  });
 
   const handleFocus = useCallback(() => {
+    adaptive.onDropdownFocus();
     setIsOpen(true);
     dismissKeyboardBeforeOverlay();
-  }, []);
+  }, [adaptive.onDropdownFocus]);
 
   const handleBlur = useCallback(() => {
     setIsOpen(false);
@@ -55,9 +57,17 @@ const FinancialYearDropdown = ({
         style,
       ]}
     >
+      <View
+        ref={adaptive.triggerRef}
+        onLayout={adaptive.onTriggerLayout}
+        collapsable={false}
+      >
       <ElementDropdown
         style={[styles.pillDropdown, isIos && iosStyles.pillDropdown]}
-        containerStyle={styles.menuContainer}
+        containerStyle={[
+          styles.menuContainer,
+          adaptive.dropdownPosition === 'top' && styles.menuContainerUp,
+        ]}
         itemContainerStyle={styles.itemContainer}
         selectedTextStyle={[styles.selectedText, isIos && iosStyles.selectedText]}
         placeholderStyle={[styles.selectedText, isIos && iosStyles.selectedText]}
@@ -67,8 +77,8 @@ const FinancialYearDropdown = ({
         labelField="label"
         valueField="value"
         value={value}
-        dropdownPosition="auto"
-        maxHeight={220}
+        dropdownPosition={adaptive.dropdownPosition}
+        maxHeight={adaptive.maxHeight}
         zIndex={isOpen ? 3000 : 1}
         iconStyle={styles.hiddenIcon}
         renderRightIcon={renderRightIcon}
@@ -86,6 +96,7 @@ const FinancialYearDropdown = ({
           </View>
         )}
       />
+      </View>
     </View>
   );
 };
@@ -150,6 +161,10 @@ const styles = StyleSheet.create({
       android: { elevation: 8 },
       default: {},
     }),
+  },
+  menuContainerUp: {
+    marginTop: 0,
+    marginBottom: 4,
   },
   itemContainer: {
     borderRadius: 8,

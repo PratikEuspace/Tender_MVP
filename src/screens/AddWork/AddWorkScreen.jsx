@@ -9,24 +9,21 @@
 //   locked    — future steps (grey lock, not tappable)
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
 import SettingsDrawer from '../../components/Settingsdrawer';
+import StartNewWorkFab, {
+  START_NEW_WORK_FAB_SCROLL_PADDING,
+} from '../../components/workflow/StartNewWorkFab';
 import WorkflowStepBadge from '../../components/workflow/WorkflowStepBadge';
 
 import useWorkStore from '../../store/useWorkStore';
 import useDraftStore from '../../store/useDraftStore';
 
-import {
-  Colors,
-  FontFamily,
-  FontSize,
-  FontWeight,
-  Spacing,
-} from '../../theme';
+import { Colors, FontFamily, FontWeight, Spacing } from '../../theme';
 
 import {
   WORKFLOW_STEPS,
@@ -39,8 +36,7 @@ const AddWorkScreen = ({ navigation }) => {
   const { t } = useTranslation('workflow');
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { currentWork, currentWorkId, refreshCurrentWork, clearCurrentWork } =
-    useWorkStore();
+  const { currentWork, refreshCurrentWork, clearCurrentWork } = useWorkStore();
   const clearAllDrafts = useDraftStore((state) => state.clearAllDrafts);
 
   useEffect(() => {
@@ -68,45 +64,38 @@ const AddWorkScreen = ({ navigation }) => {
 
   return (
     <>
-      <ScreenLayout
-        showMenu
-        showNotification
-        scrollable
-        onMenuPress={() => setDrawerOpen(true)}
-        contentStyle={styles.scrollContent}
-        title={t('hub.title')}
-        headerTitleStyle={styles.heroTitle}
-      >
-        {currentWorkId ? (
-          <TouchableOpacity
-            onPress={handleStartNewWork}
-            accessibilityRole="button"
-            accessibilityLabel={t('hub.startNewWorkAccessibility')}
-            style={styles.newWorkButton}
-          >
-            <Text style={styles.newWorkText}>{t('hub.startNewWork')}</Text>
-          </TouchableOpacity>
-        ) : null}
+      <View style={styles.screen}>
+        <ScreenLayout
+          showMenu
+          showNotification
+          scrollable
+          onMenuPress={() => setDrawerOpen(true)}
+          contentStyle={styles.scrollContent}
+          title={t('hub.title')}
+          headerTitleStyle={styles.heroTitle}
+        >
+          <View style={styles.cardList}>
+            {WORKFLOW_STEPS.map((step) => {
+              const status = deriveStepStatus(step.id, effectiveWorkflowStep);
+              const isLocked = status === 'locked';
+              const isPending = status === 'pending';
 
-        <View style={styles.cardList}>
-          {WORKFLOW_STEPS.map((step) => {
-            const status = deriveStepStatus(step.id, effectiveWorkflowStep);
-            const isLocked = status === 'locked';
-            const isPending = status === 'pending';
+              return (
+                <NavigationCard
+                  key={step.id}
+                  title={getStepTitle(step.screenType, t)}
+                  disabled={isLocked}
+                  emphasis={isPending ? 'pending' : 'none'}
+                  onPress={() => handleStepPress(step, status)}
+                  leftIcon={<WorkflowStepBadge status={status} />}
+                />
+              );
+            })}
+          </View>
+        </ScreenLayout>
 
-            return (
-              <NavigationCard
-                key={step.id}
-                title={getStepTitle(step.screenType, t)}
-                disabled={isLocked}
-                emphasis={isPending ? 'pending' : 'none'}
-                onPress={() => handleStepPress(step, status)}
-                leftIcon={<WorkflowStepBadge status={status} />}
-              />
-            );
-          })}
-        </View>
-      </ScreenLayout>
+        <StartNewWorkFab onPress={handleStartNewWork} />
+      </View>
 
       <SettingsDrawer
         visible={drawerOpen}
@@ -117,6 +106,9 @@ const AddWorkScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   heroTitle: {
     fontFamily: FontFamily.bold,
     fontWeight: FontWeight.bold,
@@ -126,17 +118,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 0,
-  },
-  newWorkButton: {
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  newWorkText: {
-    fontSize: FontSize.sm,
-    fontFamily: FontFamily.regular,
-    color: Colors.primaryLight,
-    textDecorationLine: 'underline',
+    paddingBottom: START_NEW_WORK_FAB_SCROLL_PADDING,
   },
   cardList: {
     marginTop: Spacing.md,

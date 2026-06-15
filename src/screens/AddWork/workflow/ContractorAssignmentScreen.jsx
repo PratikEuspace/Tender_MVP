@@ -255,7 +255,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
             value={form.contractor_contact}
             type="phone"
             keyboardType="phone-pad"
-            onChangeText={(v) => updateField('contractor_contact', v)}
+            onChangeText={(v) => updateField('contractor_contact', v.slice(0, 10))}
           />
 
           <FormFieldLabel

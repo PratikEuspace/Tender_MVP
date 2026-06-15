@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -13,19 +13,58 @@ import {
 } from '../../db/repositories/financialYearBudgetRepository';
 import { localizeDropdownOptions } from '../../i18n/workflowLabels';
 import theme from '../../theme';
+import {
+  dismissKeyboard,
+  dismissKeyboardAfterClose,
+} from '../../utils/keyboardDismiss';
+
+/** Unselected financial year — not stored in SQLite. */
+const EMPTY_FY_VALUE = '';
 
 const FinancialYearBudgetSection = () => {
-  const { t } = useTranslation(['settings', 'workflow']);
-  const [financialYear, setFinancialYear] = useState('2025-26');
+  const { t } = useTranslation(['settings', 'workflow', 'auth', 'common']);
+  const budgetInputRef = useRef(null);
+  const [financialYear, setFinancialYear] = useState(EMPTY_FY_VALUE);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const releaseBudgetInputFocus = useCallback(() => {
+    budgetInputRef.current?.blur?.();
+    dismissKeyboard();
+  }, []);
+
+  const resetBudgetForm = useCallback(() => {
+    setFinancialYear(EMPTY_FY_VALUE);
+    setBudgetAmount('');
+    releaseBudgetInputFocus();
+  }, [releaseBudgetInputFocus]);
+
+  const showBudgetAlert = useCallback(
+    (title, message) => {
+      Alert.alert(title, message, [
+        {
+          text: t('auth:ok'),
+          onPress: dismissKeyboardAfterClose,
+        },
+      ]);
+    },
+    [t],
+  );
+
   const fyOptions = useMemo(
-    () => localizeDropdownOptions(FINANCIAL_YEAR_OPTIONS, t),
+    () => [
+      { label: t('common:dash'), value: EMPTY_FY_VALUE },
+      ...localizeDropdownOptions(FINANCIAL_YEAR_OPTIONS, t),
+    ],
     [t],
   );
 
   const loadBudgetForYear = useCallback((fy) => {
+    if (!fy) {
+      setBudgetAmount('');
+      return;
+    }
+
     try {
       const row = getFinancialYearBudget(fy);
       setBudgetAmount(
@@ -41,31 +80,43 @@ const FinancialYearBudgetSection = () => {
 
   useFocusEffect(
     useCallback(() => {
-      loadBudgetForYear(financialYear);
-    }, [financialYear, loadBudgetForYear]),
+      resetBudgetForm();
+    }, [resetBudgetForm]),
   );
 
-  const handleYearChange = (value) => {
-    setFinancialYear(value);
-    loadBudgetForYear(value);
+  const handleYearChange = (item) => {
+    const nextYear = item?.value ?? EMPTY_FY_VALUE;
+    setFinancialYear(nextYear);
+    loadBudgetForYear(nextYear);
   };
 
   const handleSave = () => {
     if (saving) return;
 
+    releaseBudgetInputFocus();
+
+    if (!financialYear) {
+      showBudgetAlert(
+        t('settings:fyBudget.yearRequiredTitle'),
+        t('settings:fyBudget.yearRequiredMessage'),
+      );
+      return;
+    }
+
     const amount = parseFloat(String(budgetAmount).replace(/[^0-9.]/g, ''));
     if (!Number.isFinite(amount) || amount < 0) {
-      Alert.alert(t('settings:fyBudget.invalidTitle'), t('settings:fyBudget.invalidMessage'));
+      showBudgetAlert(t('settings:fyBudget.invalidTitle'), t('settings:fyBudget.invalidMessage'));
       return;
     }
 
     setSaving(true);
     try {
       upsertFinancialYearBudget(financialYear, amount);
-      Alert.alert(t('settings:fyBudget.savedTitle'), t('settings:fyBudget.savedMessage'));
+      resetBudgetForm();
+      showBudgetAlert(t('settings:fyBudget.savedTitle'), t('settings:fyBudget.savedMessage'));
     } catch (error) {
       console.error('[FinancialYearBudgetSection] save failed:', error);
-      Alert.alert(t('settings:fyBudget.errorTitle'), t('settings:fyBudget.errorMessage'));
+      showBudgetAlert(t('settings:fyBudget.errorTitle'), t('settings:fyBudget.errorMessage'));
     } finally {
       setSaving(false);
     }
@@ -80,10 +131,11 @@ const FinancialYearBudgetSection = () => {
         placeholder={t('settings:fyBudget.financialYearPlaceholder')}
         data={fyOptions}
         value={financialYear}
-        onChange={(item) => handleYearChange(item?.value)}
+        onChange={handleYearChange}
       />
 
       <Inputboxfield
+        ref={budgetInputRef}
         label={t('settings:fyBudget.amountLabel')}
         placeholder={t('settings:fyBudget.amountPlaceholder')}
         type="number"

@@ -23,6 +23,8 @@
     "save": "बजेट जतन करा",
     "savedTitle": "जतन केले",
     "savedMessage": "आर्थिक वर्ष बजेट यशस्वीरित्या अद्यतनित केले.",
+    "yearRequiredTitle": "आर्थिक वर्ष आवश्यक",
+    "yearRequiredMessage": "कृपया आर्थिक वर्ष निवडा.",
     "invalidTitle": "अवैध रक्कम",
     "invalidMessage": "कृपया वैध बजेट रक्कम प्रविष्ट करा.",
     "errorTitle": "जतन अयशस्वी",

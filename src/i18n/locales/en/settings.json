@@ -23,6 +23,8 @@
     "save": "Save Budget",
     "savedTitle": "Saved",
     "savedMessage": "Financial year budget updated successfully.",
+    "yearRequiredTitle": "Financial year required",
+    "yearRequiredMessage": "Please select a financial year.",
     "invalidTitle": "Invalid amount",
     "invalidMessage": "Please enter a valid budget amount.",
     "errorTitle": "Save failed",

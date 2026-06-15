@@ -1,8 +1,8 @@
 {
   "hub": {
     "title": "Add Work",
-    "startNewWork": "Start new work",
-    "startNewWorkAccessibility": "Start new work"
+    "startNewWork": "Start New Work",
+    "startNewWorkAccessibility": "Start New Work"
   },
   "common": {
     "saveAndContinue": "Save & Continue",
