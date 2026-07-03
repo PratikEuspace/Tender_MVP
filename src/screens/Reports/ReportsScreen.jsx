@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,7 @@ import ReportInfoBanner from '../../components/reports/ReportInfoBanner';
 import ReportBudgetCard from '../../components/reports/ReportBudgetCard';
 import ReportExportSection from '../../components/reports/ReportExportSection';
 import ReportShareCard from '../../components/reports/ReportShareCard';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import { translateBudgetSummary } from '../../i18n/reportLabels';
 import {
   emptyBudgetSummary,
@@ -26,6 +27,7 @@ import { exportFinancialYearReportPdf } from '../../services/reportsPdfExportSer
 
 const ReportsScreen = () => {
   const { t, i18n } = useTranslation('reports');
+  const { showConfirmation, showSuccess, showError, showInfo } = useAppDialog();
   const { works, refreshWorks } = useWorkStore();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [fy, setFy] = useState('2025-26');
@@ -92,27 +94,42 @@ const ReportsScreen = () => {
   const handleExportPdf = useCallback(async () => {
     if (exportingPdf) return;
 
-    setExportingPdf(true);
-    try {
-      const result = await exportFinancialYearReportPdf({
-        financialYear: fy,
-        works,
-        labels: pdfExportLabels,
-      });
+    await showConfirmation({
+      title: t('export.confirmTitle'),
+      message: t('export.confirmMessage'),
+      onConfirm: async () => {
+        setExportingPdf(true);
+        try {
+          const result = await exportFinancialYearReportPdf({
+            financialYear: fy,
+            works,
+            labels: pdfExportLabels,
+          });
 
-      if (result.noData) {
-        Alert.alert(t('export.noDataTitle'), t('export.noDataMessage'));
-        return;
-      }
+          if (result.noData) {
+            showInfo({
+              title: t('export.noDataTitle'),
+              message: t('export.noDataMessage'),
+            });
+            return;
+          }
 
-      Alert.alert(t('export.successTitle'), t('export.successMessage'));
-    } catch (error) {
-      console.error('[ReportsScreen] export PDF failed:', error);
-      Alert.alert(t('export.errorTitle'), t('export.errorMessage'));
-    } finally {
-      setExportingPdf(false);
-    }
-  }, [exportingPdf, fy, works, pdfExportLabels, t]);
+          showSuccess({
+            title: t('export.successTitle'),
+            message: t('export.successMessage'),
+          });
+        } catch (error) {
+          console.error('[ReportsScreen] export PDF failed:', error);
+          showError({
+            title: t('export.errorTitle'),
+            message: t('export.errorMessage'),
+          });
+        } finally {
+          setExportingPdf(false);
+        }
+      },
+    });
+  }, [exportingPdf, fy, works, pdfExportLabels, showConfirmation, showError, showInfo, showSuccess, t]);
 
   return (
     <>

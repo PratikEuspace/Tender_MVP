@@ -52,6 +52,8 @@
     "imagesSection": "अपलोड केलेल्या प्रतिमा",
     "fileNotFound": "(फाइल सापडली नाही)",
     "shareTitle": "काम अहवाल PDF शेअर करा",
+    "confirmTitle": "PDF निर्यात",
+    "confirmMessage": "तुम्हाला खात्रीने हा अहवाल निर्यात करायचा आहे का?",
     "tender": {
       "aPacket": "A पॅकेट",
       "bPacket": "B पॅकेट"

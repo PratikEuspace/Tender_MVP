@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import FormDropdown from '../../../components/FormDropdown';
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
@@ -21,6 +21,7 @@ import { getWorkById, upsertWorkDetails } from '../../../db/repositories/worksRe
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
     getStepScreenTitle,
@@ -155,7 +156,7 @@ const WorkDetailsScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (msg) => Alert.alert(t('common.saveFailedTitle'), msg),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

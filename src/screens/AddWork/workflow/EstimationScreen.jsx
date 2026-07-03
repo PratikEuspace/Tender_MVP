@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
@@ -27,6 +27,7 @@ import {
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
     getStepScreenTitle,
@@ -138,7 +139,7 @@ const EstimationScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

@@ -3,7 +3,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import LanguagePicker from '../../components/LanguagePicker';
 import ScreenLayout from '../../components/layouts/Screenlayout';
@@ -11,6 +11,7 @@ import NavigationCard from '../../components/Navigationcard';
 import BackupProgressModal from '../../components/settings/BackupProgressModal';
 import FinancialYearBudgetSection from '../../components/settings/FinancialYearBudgetSection';
 import SettingsDrawer from '../../components/Settingsdrawer';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import {
     createBackupArchive,
     getBackupExportPreview,
@@ -55,6 +56,7 @@ const SettingsSection = ({ title, children }) => (
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation('settings');
+  const { showConfirmation, showSuccess, showError, showWarning, showInfo } = useAppDialog();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [backupProgress, setBackupProgress] = useState(null);
 
@@ -92,21 +94,27 @@ const SettingsScreen = () => {
   const showExportSuccess = useCallback(
     (result) => {
       if (result.missingFileCount > 0) {
-        Alert.alert(
-          t('backup.successTitle'),
-          t('backup.successWithWarnings', { count: result.missingFileCount }),
-        );
+        showWarning({
+          title: t('backup.successTitle'),
+          message: t('backup.successWithWarnings', { count: result.missingFileCount }),
+        });
         return;
       }
 
       if (!result.shared) {
-        Alert.alert(t('backup.successTitle'), t('backup.successSavedLocally'));
+        showSuccess({
+          title: t('backup.successTitle'),
+          message: t('backup.successSavedLocally'),
+        });
         return;
       }
 
-      Alert.alert(t('backup.successTitle'), t('backup.successMessage'));
+      showSuccess({
+        title: t('backup.successTitle'),
+        message: t('backup.successMessage'),
+      });
     },
-    [t],
+    [showSuccess, showWarning, t],
   );
 
   const runExport = useCallback(
@@ -131,15 +139,15 @@ const SettingsScreen = () => {
 
         showExportSuccess({ ...archive, shared });
       } catch (error) {
-        Alert.alert(
-          t('backup.errorTitle'),
-          resolveBackupErrorMessage(error, t, 'backup'),
-        );
+        showError({
+          title: t('backup.errorTitle'),
+          message: resolveBackupErrorMessage(error, t, 'backup'),
+        });
       } finally {
         setBackupProgress(null);
       }
     },
-    [showExportSuccess, t],
+    [showExportSuccess, showError, t],
   );
 
   const handleExportBackup = useCallback(async () => {
@@ -152,17 +160,20 @@ const SettingsScreen = () => {
       preview = await getBackupExportPreview();
     } catch (error) {
       setBackupProgress(null);
-      Alert.alert(
-        t('backup.errorTitle'),
-        resolveBackupErrorMessage(error, t, 'backup'),
-      );
+      showError({
+        title: t('backup.errorTitle'),
+        message: resolveBackupErrorMessage(error, t, 'backup'),
+      });
       return;
     }
 
     setBackupProgress(null);
 
     if (preview.totalRows === 0) {
-      Alert.alert(t('backup.emptyTitle'), t('backup.emptyMessage'));
+      showInfo({
+        title: t('backup.emptyTitle'),
+        message: t('backup.emptyMessage'),
+      });
       return;
     }
 
@@ -171,21 +182,20 @@ const SettingsScreen = () => {
     };
 
     if (preview.isLarge) {
-      Alert.alert(
-        t('backup.sizeWarningTitle'),
-        t('backup.sizeWarningMessage', {
+      await showConfirmation({
+        title: t('backup.sizeWarningTitle'),
+        message: t('backup.sizeWarningMessage', {
           size: formatBackupSizeLabel(preview.estimatedArchiveBytes, i18n.language),
         }),
-        [
-          { text: t('restore.cancel'), style: 'cancel' },
-          { text: t('backup.continue'), onPress: startExport },
-        ],
-      );
+        cancelText: t('restore.cancel'),
+        confirmText: t('backup.continue'),
+        onConfirm: startExport,
+      });
       return;
     }
 
     startExport();
-  }, [backupBusy, i18n.language, runExport, t]);
+  }, [backupBusy, i18n.language, runExport, showConfirmation, showError, showInfo, t]);
 
   const handleImportBackup = useCallback(async () => {
     if (backupBusy) return;
@@ -197,10 +207,10 @@ const SettingsScreen = () => {
     try {
       pick = await pickBackupArchiveFile();
     } catch (error) {
-      Alert.alert(
-        t('restore.errorTitle'),
-        resolveBackupErrorMessage(error, t, 'restore'),
-      );
+      showError({
+        title: t('restore.errorTitle'),
+        message: resolveBackupErrorMessage(error, t, 'restore'),
+      });
       return;
     }
 
@@ -219,10 +229,10 @@ const SettingsScreen = () => {
       stagingDir = inspected.stagingDir;
     } catch (error) {
       setBackupProgress(null);
-      Alert.alert(
-        t('restore.errorTitle'),
-        resolveBackupErrorMessage(error, t, 'restore'),
-      );
+      showError({
+        title: t('restore.errorTitle'),
+        message: resolveBackupErrorMessage(error, t, 'restore'),
+      });
       return;
     }
 
@@ -234,7 +244,10 @@ const SettingsScreen = () => {
       const message = code
         ? t(`restore.errors.${code}`, { defaultValue: t('restore.invalidMessage') })
         : t('restore.invalidMessage');
-      Alert.alert(t('restore.invalidTitle'), message);
+      showError({
+        title: t('restore.invalidTitle'),
+        message,
+      });
       return;
     }
 
@@ -244,54 +257,50 @@ const SettingsScreen = () => {
       i18n.language,
     );
 
-    Alert.alert(
-      t('restore.confirmTitle'),
-      t('restore.confirmMessageDetailed', {
+    await showConfirmation({
+      title: t('restore.confirmTitle'),
+      message: t('restore.confirmMessageDetailed', {
         works: inspection.workCount,
         files: inspection.fileCount,
         size: sizeLabel,
         date: exportedLabel,
       }),
-      [
-        {
-          text: t('restore.cancel'),
-          style: 'cancel',
-          onPress: () => cleanupDirectory(stagingDir),
-        },
-        {
-          text: t('restore.confirmButton'),
-          style: 'destructive',
-          onPress: () => {
-              setBackupProgress({ mode: 'import', phase: 'restoring' });
-              importInspectedBackupArchive(stagingDir, {
-                inspection,
-                onProgress: (phase) => setBackupProgress({ mode: 'import', phase }),
-              })
-              .then(async () => {
-                clearCurrentWork();
-                clearAllDrafts();
-                await refreshWorks();
-                Alert.alert(t('restore.successTitle'), t('restore.successMessage'));
-              })
-              .catch((error) => {
-                Alert.alert(
-                  t('restore.errorTitle'),
-                  resolveBackupErrorMessage(error, t, 'restore'),
-                );
-              })
-              .finally(() => {
-                setBackupProgress(null);
-              });
-          },
-        },
-      ],
-    );
+      cancelText: t('restore.cancel'),
+      confirmText: t('restore.confirmButton'),
+      onCancel: () => cleanupDirectory(stagingDir),
+      onConfirm: async () => {
+        setBackupProgress({ mode: 'import', phase: 'restoring' });
+        try {
+          await importInspectedBackupArchive(stagingDir, {
+            inspection,
+            onProgress: (phase) => setBackupProgress({ mode: 'import', phase }),
+          });
+          clearCurrentWork();
+          clearAllDrafts();
+          await refreshWorks();
+          showSuccess({
+            title: t('restore.successTitle'),
+            message: t('restore.successMessage'),
+          });
+        } catch (error) {
+          showError({
+            title: t('restore.errorTitle'),
+            message: resolveBackupErrorMessage(error, t, 'restore'),
+          });
+        } finally {
+          setBackupProgress(null);
+        }
+      },
+    });
   }, [
     backupBusy,
     clearAllDrafts,
     clearCurrentWork,
     i18n.language,
     refreshWorks,
+    showConfirmation,
+    showError,
+    showSuccess,
     t,
   ]);
 

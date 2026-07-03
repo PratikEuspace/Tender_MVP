@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import UploadDocument from '../UploadDocument';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import { buildUploadDocumentEntry } from '../../utils/documentUploadProps';
 import {
   deleteBillPdfFile,
@@ -14,14 +14,15 @@ import {
  */
 const BillDocumentUpload = ({ workId, filePath = '', onChange }) => {
   const { t } = useTranslation('workflow');
+  const { showConfirmation, showError } = useAppDialog();
   const [uploading, setUploading] = useState(false);
 
   const handlePick = useCallback(async () => {
     if (!workId) {
-      Alert.alert(
-        t('alerts.uploadFailedTitle'),
-        t('alerts.uploadFailedNoWorkId'),
-      );
+      showError({
+        title: t('alerts.uploadFailedTitle'),
+        message: t('alerts.uploadFailedNoWorkId'),
+      });
       return;
     }
 
@@ -41,19 +42,18 @@ const BillDocumentUpload = ({ workId, filePath = '', onChange }) => {
     };
 
     if (filePath) {
-      Alert.alert(
-        t('alerts.replaceDocumentTitle'),
-        t('alerts.replaceDocumentMessage'),
-        [
-          { text: t('alerts.cancel'), style: 'cancel' },
-          { text: t('alerts.replace'), onPress: uploadPdf },
-        ],
-      );
+      await showConfirmation({
+        title: t('alerts.replaceDocumentTitle'),
+        message: t('alerts.replaceDocumentMessage'),
+        cancelText: t('alerts.cancel'),
+        confirmText: t('alerts.replace'),
+        onConfirm: uploadPdf,
+      });
       return;
     }
 
     await uploadPdf();
-  }, [workId, filePath, onChange, t]);
+  }, [workId, filePath, onChange, showConfirmation, showError, t]);
 
   return (
     <UploadDocument

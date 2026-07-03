@@ -10,6 +10,11 @@
   "untitledWork": "Untitled work",
   "codePrefix": "Code : {{code}}",
   "dash": "—",
+  "dialog": {
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  },
   "documents": "Documents",
   "status": {
     "all": "All",

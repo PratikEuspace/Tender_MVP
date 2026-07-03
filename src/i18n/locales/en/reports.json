@@ -52,6 +52,8 @@
     "imagesSection": "Uploaded Images",
     "fileNotFound": "(file not found)",
     "shareTitle": "Share Work Report PDF",
+    "confirmTitle": "Export PDF",
+    "confirmMessage": "Are you sure you want to export this report?",
     "tender": {
       "aPacket": "A Packet",
       "bPacket": "B Packet"

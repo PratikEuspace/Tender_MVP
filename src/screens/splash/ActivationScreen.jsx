@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
-  Alert,
+  Animated,
+  Easing,
   InputAccessoryView,
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
   activateSubscription,
@@ -22,6 +25,7 @@ import {
 } from '../../services/subscriptionService';
 import useAuthStore from '../../store/useAuthStore';
 import { isActivationNetworkAvailable } from '../../utils/activationNetwork';
+import { showAppDialog } from '../../utils/appDialog';
 import {
   Colors,
   FontFamily,
@@ -32,7 +36,11 @@ import {
   Layout,
   Typography,
   Input as InputTheme,
+  ZIndex,
 } from '../../theme';
+
+const TOAST_AUTO_DISMISS_MS = 4000;
+const TOAST_ICON_SIZE = 20;
 
 const DESIGN_FRAME = 375;
 const s = (n) => (Layout.screenWidth / DESIGN_FRAME) * n;
@@ -68,19 +76,53 @@ const activationErrorKeys = {
   },
 };
 
+const activationErrorTypes = {
+  [ACTIVATION_ERROR_CODES.INVALID_MOBILE]: 'warning',
+  [ACTIVATION_ERROR_CODES.INVALID_KEY]: 'warning',
+  [ACTIVATION_ERROR_CODES.USER_NOT_FOUND]: 'error',
+  [ACTIVATION_ERROR_CODES.EXPIRED]: 'error',
+  [ACTIVATION_ERROR_CODES.NETWORK_ERROR]: 'error',
+};
+
 const ActivationScreen = ({ navigation }) => {
   const { t } = useTranslation('auth');
+  const insets = useSafeAreaInsets();
   const setSession = useAuthStore((state) => state.setSession);
   const [mobileNumber, setMobileNumber] = useState('');
   const [subscriptionKey, setSubscriptionKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const toastAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (!toastMessage) return undefined;
-    const timer = setTimeout(() => setToastMessage(''), 3500);
+    if (!toastMessage) {
+      toastAnim.setValue(0);
+      return undefined;
+    }
+
+    toastAnim.setValue(0);
+    Animated.timing(toastAnim, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+
+    const timer = setTimeout(() => {
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          setToastMessage('');
+        }
+      });
+    }, TOAST_AUTO_DISMISS_MS);
+
     return () => clearTimeout(timer);
-  }, [toastMessage]);
+  }, [toastAnim, toastMessage]);
 
   const showNoInternetToast = () => {
     setToastMessage(t('noInternetMessage'));
@@ -88,7 +130,12 @@ const ActivationScreen = ({ navigation }) => {
 
   const showActivationError = (code) => {
     const keys = activationErrorKeys[code] ?? activationErrorKeys[ACTIVATION_ERROR_CODES.NETWORK_ERROR];
-    Alert.alert(t(keys.titleKey), t(keys.messageKey), [{ text: t('ok') }]);
+    const type = activationErrorTypes[code] ?? 'error';
+    showAppDialog({
+      type,
+      title: t(keys.titleKey),
+      message: t(keys.messageKey),
+    });
   };
 
   const handleActivate = async () => {
@@ -182,9 +229,33 @@ const ActivationScreen = ({ navigation }) => {
       </KeyboardAvoidingView>
 
       {toastMessage ? (
-        <View style={styles.toast} pointerEvents="none">
-          <Text style={styles.toastText}>{toastMessage}</Text>
-        </View>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            {
+              top: insets.top + Spacing.sm,
+              opacity: toastAnim,
+              transform: [
+                {
+                  translateY: toastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-24, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.toastContent}>
+            <Ionicons
+              name="information-circle-outline"
+              size={TOAST_ICON_SIZE}
+              color={Colors.primary}
+            />
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </View>
+        </Animated.View>
       ) : null}
 
       {Platform.OS === 'ios' ? (
@@ -303,17 +374,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: Spacing.lg,
     right: Spacing.lg,
-    bottom: Spacing.xxl,
-    backgroundColor: 'rgba(0, 0, 0, 0.88)',
+    zIndex: ZIndex.toast,
+    backgroundColor: Colors.surface,
     borderRadius: Radius.md,
+    borderWidth: 2,
+    borderColor: Colors.primary,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.sm + 2,
+    ...Shadow.card,
+  },
+  toastContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   toastText: {
-    fontFamily: FontFamily.regular,
+    flex: 1,
+    fontFamily: FontFamily.medium,
+    fontWeight: FontWeight.medium,
     fontSize: Typography.bodySm.fontSize,
-    color: Colors.textInverse,
-    textAlign: 'center',
+    color: Colors.primary,
     lineHeight: 20,
   },
   hiddenInputAccessory: {

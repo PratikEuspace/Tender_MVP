@@ -1,10 +1,10 @@
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
 
 import useSubscriptionExpiry from '../../hooks/useSubscriptionExpiry';
 import { resetToActivation } from '../../navigation/navigationRef';
 import useAuthStore from '../../store/useAuthStore';
+import { showErrorDialog } from '../../utils/appDialog';
 
 /**
  * App-wide subscription expiry watcher — runs while NavigationContainer is mounted.
@@ -23,9 +23,11 @@ const SubscriptionExpiryHandler = () => {
     clearSession();
     resetToActivation();
 
-    Alert.alert(t('expiredTitle'), t('expiredMessage'), [
-      { text: t('backToLogin'), onPress: () => { handlingRef.current = false; } },
-    ]);
+    showErrorDialog(t('expiredTitle'), t('expiredMessage'), {
+      onConfirm: () => {
+        handlingRef.current = false;
+      },
+    });
   }, [clearSession, t]);
 
   useSubscriptionExpiry(isActivated ? expiresAt : null, handleExpired);

@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
@@ -25,6 +25,8 @@ import { DOCUMENT_TYPES } from '../../../constants/documentTypes';
 import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import { formatDateForStorage } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
+import { showWarningDialog } from '../../../utils/appDialog';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
@@ -270,7 +272,7 @@ const BillSubmissionScreen = ({ navigation }) => {
           currentSummary.totalBill - currentSummary.amountPaid,
         );
         if (currentSummary.totalBill > 0 && amount > remaining) {
-          Alert.alert(
+          showWarningDialog(
             t('alerts.paymentExceedsTitle'),
             t('alerts.paymentExceedsMessage', { amount: formatRupee(remaining) }),
           );
@@ -280,7 +282,7 @@ const BillSubmissionScreen = ({ navigation }) => {
     }
 
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

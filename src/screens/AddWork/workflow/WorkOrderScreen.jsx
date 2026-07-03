@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
 import Inputboxfield from '../../../components/Inputboxfield';
@@ -23,6 +23,7 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
     getStepScreenTitle,
@@ -126,7 +127,7 @@ const WorkOrderScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

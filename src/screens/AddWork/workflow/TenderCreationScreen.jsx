@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import FormToggleField from '../../../components/FormToggleField';
 import { HelpTooltipScope } from '../../../components/help/helpTooltipScope';
@@ -21,6 +21,7 @@ import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
     getStepScreenTitle,
@@ -141,7 +142,7 @@ const TenderCreationScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (m) => Alert.alert(t('common.saveFailedTitle'), m),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

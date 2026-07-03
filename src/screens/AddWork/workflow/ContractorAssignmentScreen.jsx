@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 import ProgressSlot from '../../../components/layouts/Progressslot';
@@ -33,6 +33,7 @@ import { getTenderAmountByWorkId } from '../../../db/repositories/tendersReposit
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
     getStepScreenTitle,
@@ -206,7 +207,7 @@ const ContractorAssignmentScreen = ({ navigation }) => {
 
   const handleSave = () => {
     saveAndContinue(form, navigation, {
-      onValidationFail: (msg) => Alert.alert(t('common.saveFailedTitle'), msg),
+      onValidationFail: showWorkflowValidationFail,
     });
   };
 

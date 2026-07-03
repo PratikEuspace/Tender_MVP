@@ -3,6 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 
 import SubscriptionExpiryHandler from './src/components/auth/SubscriptionExpiryHandler';
+import { AppDialogProvider } from './src/context/AppDialogProvider';
 import { initDatabase } from './src/db/database';
 import { initI18n } from './src/i18n';
 import { configureIosEdgeToEdge } from './src/navigation/configureIosEdgeToEdge';
@@ -46,8 +47,10 @@ export default function App() {
 
   return (
     <NavigationContainer ref={navigationRef}>
-      <RootNavigator />
-      <SubscriptionExpiryHandler />
+      <AppDialogProvider>
+        <RootNavigator />
+        <SubscriptionExpiryHandler />
+      </AppDialogProvider>
     </NavigationContainer>
   );
 }

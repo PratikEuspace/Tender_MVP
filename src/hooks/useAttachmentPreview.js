@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import AttachmentImagePreviewModal from '../components/attachments/AttachmentImagePreviewModal';
@@ -9,6 +8,7 @@ import {
   resolveAttachmentPreviewMode,
 } from '../services/attachmentPreviewService';
 import { getFileNameFromPath } from '../utils/fileName';
+import { showErrorDialog } from '../utils/appDialog';
 
 /**
  * Reusable attachment preview — images in full-screen modal, documents via native viewer / WebView.
@@ -33,12 +33,12 @@ const useAttachmentPreview = () => {
       const mode = resolveAttachmentPreviewMode(filePath);
 
       if (mode === 'invalid') {
-        Alert.alert(t('preview.errorTitle'), t('preview.invalidPath'));
+        showErrorDialog(t('preview.errorTitle'), t('preview.invalidPath'));
         return;
       }
 
       if (mode === 'missing') {
-        Alert.alert(t('preview.errorTitle'), t('preview.fileNotFound'));
+        showErrorDialog(t('preview.errorTitle'), t('preview.fileNotFound'));
         return;
       }
 
@@ -51,7 +51,7 @@ const useAttachmentPreview = () => {
         const result = await openDocumentAttachment(filePath);
 
         if (!result.ok) {
-          Alert.alert(t('preview.errorTitle'), t('preview.fileNotFound'));
+          showErrorDialog(t('preview.errorTitle'), t('preview.fileNotFound'));
           return;
         }
 
@@ -65,7 +65,7 @@ const useAttachmentPreview = () => {
         }
       } catch (error) {
         console.warn('[useAttachmentPreview] open document failed:', error);
-        Alert.alert(t('preview.errorTitle'), t('preview.cannotOpen'));
+        showErrorDialog(t('preview.errorTitle'), t('preview.cannotOpen'));
       }
     },
     [t],

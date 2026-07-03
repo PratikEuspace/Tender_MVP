@@ -21,6 +21,8 @@
     "amountLabel": "बजेट रक्कम (₹)",
     "amountPlaceholder": "बजेट रक्कम प्रविष्ट करा",
     "save": "बजेट जतन करा",
+    "confirmTitle": "बजेट जतन करायचा?",
+    "confirmMessage": "{{year}} साठी बजेट रक्कम जतन करायची?",
     "savedTitle": "जतन केले",
     "savedMessage": "आर्थिक वर्ष बजेट यशस्वीरित्या अद्यतनित केले.",
     "invalidTitle": "अवैध रक्कम",

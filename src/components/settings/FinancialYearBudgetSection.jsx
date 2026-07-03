@@ -1,12 +1,13 @@
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import FormDropdown from '../FormDropdown';
 import Inputboxfield from '../Inputboxfield';
 import PrimaryButton from '../PrimaryButton';
 import { FINANCIAL_YEAR_OPTIONS } from '../../constants/dropdownOptions';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import {
   getFinancialYearBudget,
   upsertFinancialYearBudget,
@@ -20,7 +21,8 @@ const FY_NONE = '';
 const FY_PLACEHOLDER_OPTION = { label: '-', value: FY_NONE };
 
 const FinancialYearBudgetSection = () => {
-  const { t } = useTranslation(['settings', 'workflow']);
+  const { t } = useTranslation(['settings', 'workflow', 'common']);
+  const { showConfirmation, showSuccess, showError, showWarning } = useAppDialog();
   const [financialYear, setFinancialYear] = useState(FY_NONE);
   const [budgetAmount, setBudgetAmount] = useState('');
   const [saving, setSaving] = useState(false);
@@ -69,34 +71,51 @@ const FinancialYearBudgetSection = () => {
     loadBudgetForYear(nextYear);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (saving) return;
 
     if (!financialYear) {
-      Alert.alert(
-        t('settings:fyBudget.selectYearTitle'),
-        t('settings:fyBudget.selectYearMessage'),
-      );
+      showWarning({
+        title: t('settings:fyBudget.selectYearTitle'),
+        message: t('settings:fyBudget.selectYearMessage'),
+      });
       return;
     }
 
     const amount = parseFloat(String(budgetAmount).replace(/[^0-9.]/g, ''));
     if (!Number.isFinite(amount) || amount < 0) {
-      Alert.alert(t('settings:fyBudget.invalidTitle'), t('settings:fyBudget.invalidMessage'));
+      showWarning({
+        title: t('settings:fyBudget.invalidTitle'),
+        message: t('settings:fyBudget.invalidMessage'),
+      });
       return;
     }
 
-    setSaving(true);
-    try {
-      upsertFinancialYearBudget(financialYear, amount);
-      Alert.alert(t('settings:fyBudget.savedTitle'), t('settings:fyBudget.savedMessage'));
-      resetToDefault();
-    } catch (error) {
-      console.error('[FinancialYearBudgetSection] save failed:', error);
-      Alert.alert(t('settings:fyBudget.errorTitle'), t('settings:fyBudget.errorMessage'));
-    } finally {
-      setSaving(false);
-    }
+    await showConfirmation({
+      title: t('settings:fyBudget.confirmTitle'),
+      message: t('settings:fyBudget.confirmMessage', { year: financialYear }),
+      confirmText: t('common:dialog.yes'),
+      cancelText: t('common:dialog.no'),
+      onConfirm: async () => {
+        setSaving(true);
+        try {
+          upsertFinancialYearBudget(financialYear, amount);
+          showSuccess({
+            title: t('settings:fyBudget.savedTitle'),
+            message: t('settings:fyBudget.savedMessage'),
+          });
+          resetToDefault();
+        } catch (error) {
+          console.error('[FinancialYearBudgetSection] save failed:', error);
+          showError({
+            title: t('settings:fyBudget.errorTitle'),
+            message: t('settings:fyBudget.errorMessage'),
+          });
+        } finally {
+          setSaving(false);
+        }
+      },
+    });
   };
 
   return (

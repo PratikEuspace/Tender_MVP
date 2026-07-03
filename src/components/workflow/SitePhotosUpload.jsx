@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +12,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useTranslation } from 'react-i18next';
 
 import { MAX_SITE_PHOTOS } from '../../db/repositories/workProgressRepository';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import useAttachmentPreview from '../../hooks/useAttachmentPreview';
 import {
   deleteSitePhotoFile,
@@ -91,6 +91,7 @@ const SitePhotosUpload = ({
   removeConfirmMessage,
 }) => {
   const { t } = useTranslation('workflow');
+  const { showConfirmation, showError } = useAppDialog();
   const { previewAttachment, AttachmentPreviewModals } = useAttachmentPreview();
   const [uploading, setUploading] = useState(false);
   const count = photos.length;
@@ -104,10 +105,10 @@ const SitePhotosUpload = ({
 
   const handleAddPhoto = useCallback(async () => {
     if (!workId) {
-      Alert.alert(
-        t('alerts.uploadFailedTitle'),
-        t('alerts.uploadFailedNoWorkId'),
-      );
+      showError({
+        title: t('alerts.uploadFailedTitle'),
+        message: t('alerts.uploadFailedNoWorkId'),
+      });
       return;
     }
     if (!canAddMore) return;
@@ -125,24 +126,23 @@ const SitePhotosUpload = ({
     } finally {
       setUploading(false);
     }
-  }, [workId, canAddMore, count, photos, onChange, maxPhotos, storageSubfolder, filePrefix, t]);
+  }, [workId, canAddMore, count, photos, onChange, maxPhotos, storageSubfolder, filePrefix, showError, t]);
 
   const handleRemove = useCallback(
     (index) => {
       const uri = photos[index];
-      Alert.alert(resolvedRemoveTitle, resolvedRemoveMessage, [
-        { text: t('alerts.cancel'), style: 'cancel' },
-        {
-          text: t('alerts.remove'),
-          style: 'destructive',
-          onPress: () => {
-            deleteSitePhotoFile(uri);
-            onChange?.(photos.filter((_, i) => i !== index));
-          },
+      showConfirmation({
+        title: resolvedRemoveTitle,
+        message: resolvedRemoveMessage,
+        cancelText: t('alerts.cancel'),
+        confirmText: t('alerts.remove'),
+        onConfirm: () => {
+          deleteSitePhotoFile(uri);
+          onChange?.(photos.filter((_, i) => i !== index));
         },
-      ]);
+      });
     },
-    [photos, onChange, resolvedRemoveTitle, resolvedRemoveMessage, t],
+    [onChange, photos, resolvedRemoveMessage, resolvedRemoveTitle, showConfirmation, t],
   );
 
   return (

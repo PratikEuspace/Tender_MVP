@@ -21,6 +21,8 @@
     "amountLabel": "Budget Amount (₹)",
     "amountPlaceholder": "Enter budget amount",
     "save": "Save Budget",
+    "confirmTitle": "Save budget?",
+    "confirmMessage": "Save the budget amount for {{year}}?",
     "savedTitle": "Saved",
     "savedMessage": "Financial year budget updated successfully.",
     "invalidTitle": "Invalid amount",
