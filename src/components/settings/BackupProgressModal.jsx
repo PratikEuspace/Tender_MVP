@@ -9,24 +9,28 @@ import theme from '../../theme';
 const BackupProgressModal = ({ visible, mode, phase = null }) => {
   const { t } = useTranslation('settings');
 
-  if (!visible || !mode) return null;
-
-  const namespace = mode === 'export' ? 'backup' : 'restore';
-  const phaseKey = phase ? `${namespace}.phases.${phase}` : null;
+  const isVisible = Boolean(visible && mode);
+  const namespace = mode === 'import' ? 'restore' : 'backup';
+  const phaseKey = mode && phase ? `${namespace}.phases.${phase}` : null;
   const phaseLabel = phaseKey ? t(phaseKey, { defaultValue: '' }) : '';
-  const title = t(`${namespace}.${mode === 'export' ? 'exportingTitle' : 'importingTitle'}`);
-  const fallbackMessage = t(
-    `${namespace}.${mode === 'export' ? 'exportingMessage' : 'importingMessage'}`,
-  );
+  const title = mode
+    ? t(`${namespace}.${mode === 'export' ? 'exportingTitle' : 'importingTitle'}`)
+    : '';
+  const fallbackMessage = mode
+    ? t(`${namespace}.${mode === 'export' ? 'exportingMessage' : 'importingMessage'}`)
+    : '';
   const message = phaseLabel || fallbackMessage;
 
+  // Keep the Modal mounted and toggle `visible` so iOS/Fabric can finish
+  // dismiss presentation. Returning null unmounts RCTFabricModalHostViewController
+  // mid-presentation and blocks the next Modal (AppDialog), freezing Settings.
   return (
-    <Modal visible transparent animationType="fade">
+    <Modal visible={isVisible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.card}>
           <ActivityIndicator size="large" color={theme.Colors.primary ?? '#062E52'} />
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+          {title ? <Text style={styles.title}>{title}</Text> : null}
+          {message ? <Text style={styles.message}>{message}</Text> : null}
         </View>
       </View>
     </Modal>

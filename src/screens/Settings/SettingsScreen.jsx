@@ -42,6 +42,11 @@ import { performLogout } from '../../utils/logout';
 const ICON_COLOR = '#555555';
 const ICON_SIZE = 22;
 
+/** iOS cannot present a second Modal (dialog / share sheet) while another is
+ *  still dismissing. Wait for the progress modal animation to finish first. */
+const waitForProgressModalDismiss = () =>
+  new Promise((resolve) => setTimeout(resolve, 350));
+
 const SettingsSection = ({ title, children }) => (
   <View style={styles.section}>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -102,7 +107,7 @@ const SettingsScreen = () => {
         // system share sheet cannot be presented over an already-visible RN
         // <Modal>, which otherwise leaves the UI stuck on the loading state.
         setBackupProgress(null);
-        await new Promise((resolve) => setTimeout(resolve, 350));
+        await waitForProgressModalDismiss();
 
         const shared = await shareBackupArchive(archive.filePath, {
           shareDialogTitle: t('backup.shareTitle'),
@@ -110,6 +115,8 @@ const SettingsScreen = () => {
 
         showExportSuccess({ ...archive, shared });
       } catch (error) {
+        setBackupProgress(null);
+        await waitForProgressModalDismiss();
         showError({
           title: t('backup.errorTitle'),
           message: resolveBackupErrorMessage(error, t, 'backup'),
@@ -124,21 +131,23 @@ const SettingsScreen = () => {
   const handleExportBackup = useCallback(async () => {
     if (backupBusy) return;
 
-    setBackupProgress({ mode: 'export', phase: 'reading' });
-
+    // Do NOT open BackupProgressModal before the empty/size dialogs.
+    // On iOS (Fabric), presenting AppDialog while another RN Modal is opening
+    // or dismissing fails with:
+    //   "Attempt to present RCTFabricModalHostViewController while a
+    //    presentation is in progress"
+    // and leaves the Settings screen stuck. Preview on an empty DB is
+    // fast enough that a loading Modal is unnecessary here.
     let preview;
     try {
       preview = await getBackupExportPreview();
     } catch (error) {
-      setBackupProgress(null);
       showError({
         title: t('backup.errorTitle'),
         message: resolveBackupErrorMessage(error, t, 'backup'),
       });
       return;
     }
-
-    setBackupProgress(null);
 
     if (preview.totalRows === 0) {
       showInfo({
