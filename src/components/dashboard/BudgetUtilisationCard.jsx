@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { formatRupeesFull } from '../../utils/currencyFormat';
@@ -21,7 +20,7 @@ const BudgetUtilisationCard = ({
   percent = 0,
   title = 'Budget Utilisation',
   workCountLabel = 'Total Work Count',
-  totalBudgetLabel = 'Total Budget',
+  totalBudgetLabel = 'Yours Total Budget',
   totalSpendLabel = 'Total Spend',
   workCount = 0,
   totalBudget = 0,

@@ -1,6 +1,15 @@
 {
-  "title": "काम यादी",
+  "title": "कामांची यादी",
   "emptyTitle": "अद्याप कोणतेही काम नाही.",
-  "emptyHint": "सुरू करण्यासाठी काम जोडा टॅबवरून नवीन काम जोडा.",
-  "openWorkAccessibility": "काम उघडा {{name}}"
+  "emptyHint": "सुरू करण्यासाठी अॅड वर्क टॅबमधून काम जोडा.",
+  "openWorkAccessibility": "काम उघडा {{name}}",
+  "deleteButton": "हटवा",
+  "deleteAccessibility": "काम हटवा {{name}}",
+  "deleteTitle": "काम हटवायचे?",
+  "deleteMessage": "हे \"{{name}}\" आणि सर्व संबंधित डेटा कायमचा हटवेल. ही क्रिया पूर्ववत करता येणार नाही.",
+  "deleteSuccess": "काम यशस्वीरित्या हटवले.",
+  "deleteErrorTitle": "हटवणे अयशस्वी",
+  "deleteErrorMessage": "हे काम हटवता आले नाही. कृपया पुन्हा प्रयत्न करा.",
+  "deleteBusyTitle": "कृपया प्रतीक्षा करा",
+  "deleteBusyMessage": "सेव्ह प्रगतीत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा."
 }

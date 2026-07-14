@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import SubscriptionExpiryHandler from './src/components/auth/SubscriptionExpiryHandler';
 import { AppDialogProvider } from './src/context/AppDialogProvider';
@@ -46,11 +47,13 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <AppDialogProvider>
-        <RootNavigator />
-        <SubscriptionExpiryHandler />
-      </AppDialogProvider>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer ref={navigationRef}>
+        <AppDialogProvider>
+          <RootNavigator />
+          <SubscriptionExpiryHandler />
+        </AppDialogProvider>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }

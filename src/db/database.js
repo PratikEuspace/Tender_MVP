@@ -17,6 +17,7 @@ export const getDB = () => {
   if (!_db) {
     // expo-sqlite v14+ (SDK 50+) uses openDatabaseSync
     _db = SQLite.openDatabaseSync('tender_tracking.db');
+    _db.runSync('PRAGMA foreign_keys = ON;');
   }
   return _db;
 };

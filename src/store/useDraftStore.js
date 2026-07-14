@@ -113,6 +113,12 @@ const useDraftStore = create((set, get) => ({
     set({ drafts: { ...INITIAL_DRAFTS } });
   },
 
+  clearDraftsForWork: (workId) => {
+    Object.keys(INITIAL_DRAFTS).forEach((screenKey) => {
+      get().clearDraft(screenKey, workId);
+    });
+  },
+
   getDraft: (screenKey, workId) => {
     const bucket = get().drafts[screenKey] ?? {};
     const wk = toWorkKey(workId);

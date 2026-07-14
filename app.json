@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Tender_Mvp",
+    "name": "Ward Vikas",
     "slug": "Tender_Mvp",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -8,20 +8,18 @@
     "scheme": "tendermvp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.euspace.Tender",
+      "icon": "./assets/images/ios-icon.png",
+      "bundleIdentifier": "com.euspace.wardvikas",
       "buildNumber": "4"
     },
     "android": {
       "versionCode": 3,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/android-icon-foreground3.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.pratik_69.Tender_Mvp",
+      "package": "com.euspace.wardvikas",
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",

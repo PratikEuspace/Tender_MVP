@@ -187,17 +187,6 @@ const WorkOrderScreen = ({ navigation }) => {
             }
           />
 
-          <Inputboxfield
-            label={t('steps.workOrder.fields.notes.label')}
-            placeholder={t('steps.workOrder.fields.notes.placeholder')}
-            helpKey="workflow.workOrder.notes"
-            helpTooltipId="workOrder-notes"
-            value={form.notes}
-            onChangeText={(v) => updateField('notes', v)}
-            multiline
-            numberOfLines={3}
-          />
-
           <SitePhotosUpload
             workId={currentWorkId}
             photos={form.inauguration_photos}

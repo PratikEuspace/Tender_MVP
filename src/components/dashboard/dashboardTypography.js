@@ -7,7 +7,8 @@ export const dashboardSectionLabelStyle = {
   fontSize: 18,
   fontFamily: theme.FontFamily?.bold ?? undefined,
   color: '#111827',
-  lineHeight: 22,
+  // Slightly taller than Latin metrics so Devanagari (Marathi) tops are not clipped.
+  lineHeight: 26,
   letterSpacing: 0.15,
 };
 

@@ -132,8 +132,8 @@
         }
       },
       "toggles": {
-        "financeOn": "Finance committee required",
-        "financeOff": "Finance committee not required"
+        "financeOn": "Finance committee required?",
+        "financeOff": "Finance committee required?"
       },
       "uploads": {
         "financeLetter": "Finance committee approval letter",
@@ -153,8 +153,8 @@
       },
       "toggles": {
         "label": "Estimation done?",
-        "on": "Estimation done",
-        "off": "Estimation not done"
+        "on": "Estimation done?",
+        "off": "Estimation done?"
       },
       "uploads": {
         "section": "Estimated Pdf",
@@ -199,8 +199,8 @@
         "reason": { "label": "Re-tender reason", "placeholder": "Why is this tender re-issued?" }
       },
       "toggles": {
-        "on": "Re-tender enabled",
-        "off": "Re-tender not enabled"
+        "on": "Re-tender enabled?",
+        "off": "Re-tender enabled?"
       }
     },
     "contractorAssignment": {
@@ -260,8 +260,8 @@
       "progressDescription": "Work order issued / Work started",
       "toggles": {
         "label": "Work Completion",
-        "on": "Work completed",
-        "off": "Work in progress"
+        "on": "Work completed?",
+        "off": "Work completed?"
       }
     },
     "paymentStatus": {
@@ -274,8 +274,8 @@
         "paymentDate": { "label": "Payment date", "placeholder": "dd/mm/yy" }
       },
       "toggles": {
-        "on": "Payment released",
-        "off": "Payment not released"
+        "on": "Payment released?",
+        "off": "Payment released?"
       },
       "uploads": {
         "paymentTitle": "Payment PDF",
@@ -293,8 +293,8 @@
       },
       "toggles": {
         "label": "Bill submitted?",
-        "on": "Bill submitted",
-        "off": "Bill not submitted"
+        "on": "Bill submitted?",
+        "off": "Bill submitted?"
       },
       "uploads": {
         "billTitle": "Bill PDF",

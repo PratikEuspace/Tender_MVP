@@ -35,8 +35,6 @@ const MENU_ITEMS = [
     labelKey: 'drawer.generalCorrespondence',
     route: 'GeneralCorrespondence',
   },
-  { key: 'backup', labelKey: 'drawer.backup', handlerKey: 'onBackupPress' },
-  { key: 'restore', labelKey: 'drawer.restore', handlerKey: 'onRestorePress' },
   { key: 'subscription', labelKey: 'drawer.subscription', handlerKey: 'onSubscriptionPress' },
   { key: 'help', labelKey: 'drawer.help', handlerKey: 'onHelpPress' },
   { key: 'logout', labelKey: 'drawer.logout', action: 'logout' },

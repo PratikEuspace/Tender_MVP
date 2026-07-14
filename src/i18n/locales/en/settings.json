@@ -144,8 +144,8 @@
     },
     "estimationDone": {
       "label": "Estimation done?",
-      "rowOn": "Estimation done",
-      "rowOff": "Estimation not done"
+      "rowOn": "Estimation done?",
+      "rowOff": "Estimation done?"
     }
   }
 }

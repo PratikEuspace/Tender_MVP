@@ -1,4 +1,5 @@
 export { default as AppDialog } from './AppDialog';
+export { default as AppToast } from './AppToast';
 export { default as ConfirmationDialog } from './ConfirmationDialog';
 export { default as Backbutton } from './Backbutton';
 export { FigmaMenuIcon, FigmaBackIcon, FIGMA_HEADER_ICON_SIZE } from './icons/HeaderIcons';

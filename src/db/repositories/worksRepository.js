@@ -5,7 +5,22 @@
 // All screens access works data through this file via hooks.
 
 import { WORKFLOW_ALL_COMPLETE_STEP } from '../../constants/WorkflowSteps';
+import { extractPathsFromRow } from '../../services/backup/backupPathUtils';
 import { getDB } from '../database';
+
+const WORK_FILE_TABLES = [
+  'approvals',
+  'estimations',
+  'tenders',
+  'contractors',
+  'sanctions',
+  'work_orders',
+  'work_progress',
+  'bill_submissions',
+  'completion_closure',
+  'payments',
+  'documents',
+];
 
 // ─── Create a new work record ─────────────────────────────────────────────────
 export const createWork = (data = {}) => {
@@ -107,10 +122,32 @@ export const upsertWorkDetails = (workId, data) => {
   return workId;
 };
 
+// ─── Collect local file paths referenced by a work (before delete) ─────────────
+export const collectWorkFilePaths = (workId) => {
+  const db = getDB();
+  const paths = new Set();
+
+  WORK_FILE_TABLES.forEach((tableName) => {
+    const rows = db.getAllSync(`SELECT * FROM "${tableName}" WHERE work_id = ?;`, [workId]);
+    rows.forEach((row) => {
+      extractPathsFromRow(tableName, row).forEach((path) => paths.add(path));
+    });
+  });
+
+  return [...paths];
+};
+
 // ─── Delete work (and cascaded child records) ─────────────────────────────────
 export const deleteWork = (id) => {
   const db = getDB();
-  db.runSync('DELETE FROM works WHERE id = ?;', [id]);
+  const existing = db.getFirstSync('SELECT id FROM works WHERE id = ?;', [id]);
+  if (!existing) return false;
+
+  db.withTransactionSync(() => {
+    db.runSync('DELETE FROM works WHERE id = ?;', [id]);
+  });
+
+  return true;
 };
 
 /** One-time map from 9-step workflow_step to 12-step (payment/completion ids shifted). */
