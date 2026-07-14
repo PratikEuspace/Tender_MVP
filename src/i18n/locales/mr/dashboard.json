@@ -15,5 +15,13 @@
   "recentWork": "अलीकडील काम",
   "viewAll": "सर्व पहा",
   "viewAllAccessibility": "सर्व कामे पहा",
-  "emptyRecent": "अलीकडील काम उपलब्ध नाही"
+  "emptyRecent": "अलीकडील काम उपलब्ध नाही",
+  "activationSuccess": {
+    "success": "यशस्वी",
+    "activated": "ॲप सक्रिय झाले",
+    "welcome": "स्वागत आहे",
+    "subscription": "सदस्यता",
+    "continue": "पुढे जा",
+    "fallbackName": "वापरकर्ता"
+  }
 }

@@ -110,6 +110,8 @@
   "subscription": {
     "title": "Subscription Status",
     "screenTitle": "Subscription Status",
+    "nameLabel": "Name",
+    "unknownName": "—",
     "statusLabel": "Subscription Status",
     "validityLabel": "Subscription Validity",
     "active": "Active",

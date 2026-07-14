@@ -64,3 +64,36 @@ export const formatSubscriptionExpiryDate = (expiresAtIso, locale = 'en-IN') => 
     year: 'numeric',
   });
 };
+
+/**
+ * Derive subscription start from end date + duration fields already on the session.
+ * Falls back to `fallbackIso` (e.g. activation moment) when duration is unavailable.
+ */
+export const resolveSubscriptionStartDate = (
+  expiresAtIso,
+  durationValue,
+  durationUnit,
+  fallbackIso = null,
+) => {
+  const end = expiresAtIso ? new Date(expiresAtIso) : null;
+  const n = Number(durationValue);
+  const unit = String(durationUnit ?? '').toLowerCase();
+
+  if (end && !Number.isNaN(end.getTime()) && Number.isFinite(n) && n > 0 && unit) {
+    const start = new Date(end);
+    if (unit.startsWith('year')) {
+      start.setFullYear(start.getFullYear() - n);
+    } else if (unit.startsWith('month')) {
+      start.setMonth(start.getMonth() - n);
+    } else if (unit.startsWith('week')) {
+      start.setDate(start.getDate() - n * 7);
+    } else if (unit.startsWith('day')) {
+      start.setDate(start.getDate() - n);
+    } else {
+      return fallbackIso;
+    }
+    return start.toISOString();
+  }
+
+  return fallbackIso;
+};

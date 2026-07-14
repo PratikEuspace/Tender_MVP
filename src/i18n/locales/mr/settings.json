@@ -110,6 +110,8 @@
   "subscription": {
     "title": "सदस्यता स्थिती",
     "screenTitle": "सदस्यता स्थिती",
+    "nameLabel": "नाव",
+    "unknownName": "—",
     "statusLabel": "सदस्यता स्थिती",
     "validityLabel": "सदस्यता वैधता",
     "active": "सक्रिय",

@@ -9,6 +9,7 @@ import { dashboardSectionLabelStyle } from '../../components/dashboard/dashboard
 import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
 import RecentWorkCard from '../../components/dashboard/RecentWorkCard';
 import SearchBar from '../../components/dashboard/SearchBar';
+import ActivationSuccessCard from '../../components/auth/ActivationSuccessCard';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
 import { workCompletedToChipStatus } from '../../components/Statuschip';
@@ -20,6 +21,7 @@ import {
 } from '../../db/repositories/reportsRepository';
 import useWorkStore from '../../store/useWorkStore';
 import { Colors } from '../../theme';
+import { isActivationSuccessPending } from '../../utils/activationSuccessGate';
 
 const PRIMARY = '#062E52';
 const RECENT_WORK_LIMIT = 3;
@@ -45,6 +47,9 @@ const DashboardScreen = () => {
   const [fy, setFy] = useState('2025-26');
   const [search, setSearch] = useState('');
   const [rawBudgetSummary, setRawBudgetSummary] = useState(() => emptyBudgetSummary());
+  const [activationSuccessVisible, setActivationSuccessVisible] = useState(
+    () => isActivationSuccessPending(),
+  );
 
   const loadBudgetSummary = useCallback(() => {
     try {
@@ -200,6 +205,11 @@ const DashboardScreen = () => {
       <SettingsDrawer
         visible={drawerOpen}
         onClose={() => setDrawerOpen(false)}
+      />
+
+      <ActivationSuccessCard
+        visible={activationSuccessVisible}
+        onDismiss={() => setActivationSuccessVisible(false)}
       />
     </>
   );

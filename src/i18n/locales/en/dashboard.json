@@ -15,5 +15,13 @@
   "recentWork": "Recent Work",
   "viewAll": "View all",
   "viewAllAccessibility": "View all works",
-  "emptyRecent": "No recent work available"
+  "emptyRecent": "No recent work available",
+  "activationSuccess": {
+    "success": "Success",
+    "activated": "Application Activated",
+    "welcome": "Welcome",
+    "subscription": "Subscription",
+    "continue": "Continue",
+    "fallbackName": "User"
+  }
 }

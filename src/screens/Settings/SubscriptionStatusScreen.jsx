@@ -20,6 +20,9 @@ const SubscriptionStatusScreen = ({ navigation }) => {
   const { t, i18n } = useTranslation('settings');
   const isActivated = useAuthStore((state) => state.isActivated);
   const expiresAt = useAuthStore((state) => state.expiresAt);
+  const name = useAuthStore((state) => state.name);
+
+  const displayName = (name ?? '').trim() || t('subscription.unknownName');
 
   const { statusLabel, isActive, remainingText } = useMemo(() => {
     if (!isActivated || !expiresAt) {
@@ -55,6 +58,13 @@ const SubscriptionStatusScreen = ({ navigation }) => {
       scrollable
       contentStyle={styles.content}
     >
+      <View style={styles.card}>
+        <Text style={styles.sectionLabel}>{t('subscription.nameLabel')}</Text>
+        <Text style={styles.nameValue} numberOfLines={2}>
+          {displayName}
+        </Text>
+      </View>
+
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>{t('subscription.statusLabel')}</Text>
         <View style={styles.statusRow}>
@@ -111,6 +121,13 @@ const styles = StyleSheet.create({
     fontWeight: FontWeight?.bold ?? '700',
     fontSize: FontSize?.xl ?? 22,
     color: Colors.textPrimary ?? '#1A1A1A',
+  },
+  nameValue: {
+    fontFamily: FontFamily?.semiBold,
+    fontWeight: FontWeight?.semiBold ?? '600',
+    fontSize: FontSize?.lg ?? 18,
+    color: Colors.textPrimary ?? '#1A1A1A',
+    lineHeight: 26,
   },
   liveDotWrap: {
     width: 18,

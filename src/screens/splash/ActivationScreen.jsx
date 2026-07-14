@@ -26,6 +26,7 @@ import {
 } from '../../services/subscriptionService';
 import useAuthStore from '../../store/useAuthStore';
 import { isActivationNetworkAvailable } from '../../utils/activationNetwork';
+import { markActivationSuccessPending } from '../../utils/activationSuccessGate';
 import { showAppDialog } from '../../utils/appDialog';
 import {
   Colors,
@@ -159,6 +160,7 @@ const ActivationScreen = ({ navigation }) => {
       }
 
       setSession(result.userData, result.subscription);
+      markActivationSuccessPending();
       navigation.replace('MainApp');
     } finally {
       setLoading(false);
