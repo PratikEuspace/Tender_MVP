@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BackButton from '../../components/Backbutton';
-import NotificationButton from '../../components/Notificationbutton';
 import { FIGMA_HEADER_ICON_SIZE, FigmaMenuIcon } from '../../components/icons/HeaderIcons';
 import theme from '../../theme';
 
@@ -25,7 +24,7 @@ const ScreenLayout = ({
   // Header controls
   showBack = false,
   showMenu = false,
-  showNotification = true,
+  showNotification = false,
   showHeader = true,
 
   // Behavior
@@ -40,7 +39,7 @@ const ScreenLayout = ({
   notificationBadgeCount,
   notificationShowBadge = false,
 
-  /** Custom right header slot (e.g. FY dropdown). Overrides notification when set. */
+  /** Custom right header slot (e.g. FY dropdown). Overrides right placeholder when set. */
   headerRight,
 
   // Styles
@@ -90,21 +89,9 @@ const ScreenLayout = ({
           ) : null}
         </View>
 
-        {/* Right: custom slot or notification */}
+        {/* Right: custom slot or balanced spacer (notification icon removed) */}
         <View style={styles.headerRight}>
-          {headerRight ?? (
-            showNotification ? (
-              <NotificationButton
-                onPress={onNotificationPress}
-                iconColor={theme.Colors.white ?? '#FFFFFF'}
-                iconSize={20}
-                badgeCount={notificationBadgeCount}
-                showBadge={notificationShowBadge}
-              />
-            ) : (
-              <View style={styles.headerIconPlaceholder} />
-            )
-          )}
+          {headerRight ?? <View style={styles.headerIconPlaceholder} />}
         </View>
       </View>
     );

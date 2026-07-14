@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import StatusChip from './Statuschip';
 import theme from '../theme';
 
-const FILTER_CHIP_KEYS = ['all', 'pending', 'progress', 'completed'];
+const FILTER_CHIP_KEYS = ['all', 'progress', 'completed'];
 
 const StatusChipGroup = ({
   selectedStatus = 'all',
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   chipGap: {
-    marginRight: 6,
+    marginRight: 10,
   },
 });
 

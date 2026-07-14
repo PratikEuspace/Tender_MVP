@@ -10,6 +10,10 @@ import {
 /**
  * Standard label row: text + optional help icon + required asterisk.
  * Pass `helpKey` (help namespace) or legacy `helpText` override.
+ *
+ * Layout rules (English + Marathi):
+ * - Label and help icon stay on one horizontal line, vertically centered.
+ * - Labels prefer a single line; wrap is avoided so longer Marathi copy stays readable.
  */
 const FormFieldLabel = ({
   label,
@@ -29,7 +33,11 @@ const FormFieldLabel = ({
   return (
     <View style={[styles.row, style]}>
       {label ? (
-        <Text style={[formFieldStyles.label, styles.label, labelStyle]} numberOfLines={2}>
+        <Text
+          style={[formFieldStyles.label, styles.label, labelStyle]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {label}
           {required ? <Text style={formFieldStyles.required}> *</Text> : null}
         </Text>
@@ -43,6 +51,7 @@ const FormFieldLabel = ({
           text={helpText}
           fieldLabel={label}
           tooltipId={helpTooltipId}
+          style={styles.helpIcon}
         />
       ) : null}
     </View>
@@ -52,13 +61,20 @@ const FormFieldLabel = ({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+    width: '100%',
     marginBottom: FORM_FIELD_LABEL_MARGIN_BOTTOM,
   },
   label: {
+    flexGrow: 0,
     flexShrink: 1,
+    flexBasis: 'auto',
     marginBottom: 0,
+    maxWidth: '100%',
+  },
+  helpIcon: {
+    flexShrink: 0,
   },
   labelSpacer: {
     flex: 1,

@@ -35,8 +35,8 @@ const MENU_ITEMS = [
     labelKey: 'drawer.generalCorrespondence',
     route: 'GeneralCorrespondence',
   },
-  { key: 'subscription', labelKey: 'drawer.subscription', handlerKey: 'onSubscriptionPress' },
-  { key: 'help', labelKey: 'drawer.help', handlerKey: 'onHelpPress' },
+  { key: 'subscription', labelKey: 'drawer.subscription', route: 'SubscriptionStatus' },
+  { key: 'help', labelKey: 'drawer.help', route: 'HelpGuide' },
   { key: 'logout', labelKey: 'drawer.logout', action: 'logout' },
 ];
 
@@ -46,7 +46,6 @@ const DrawerPanel = ({
   onBackupPress,
   onRestorePress,
   onSubscriptionPress,
-  onHelpPress,
   style,
   translateX,
   overlayOpacity,
@@ -55,7 +54,7 @@ const DrawerPanel = ({
   const { t } = useTranslation('navigation');
   const insets = useSafeAreaInsets();
 
-  const handlers = { onBackupPress, onRestorePress, onSubscriptionPress, onHelpPress };
+  const handlers = { onBackupPress, onRestorePress, onSubscriptionPress };
 
   const menuItems = useMemo(
     () =>
@@ -156,7 +155,6 @@ const SettingsDrawer = ({
   onBackupPress,
   onRestorePress,
   onSubscriptionPress,
-  onHelpPress,
   style,
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -248,7 +246,6 @@ const SettingsDrawer = ({
           onBackupPress={onBackupPress}
           onRestorePress={onRestorePress}
           onSubscriptionPress={onSubscriptionPress}
-          onHelpPress={onHelpPress}
           style={style}
           translateX={translateX}
           overlayOpacity={overlayOpacity}

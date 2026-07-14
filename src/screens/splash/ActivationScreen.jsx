@@ -6,6 +6,7 @@ import {
   Easing,
   InputAccessoryView,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -52,6 +53,8 @@ const AVATAR_SIZE = s(74);
 const ARC_LG = Layout.screenWidth * 1.55;
 const ARC_MD = Layout.screenWidth * 1.25;
 const IOS_INPUT_ACCESSORY_ID = 'activation-empty-accessory';
+const SUPPORT_EMAIL = 'wardvikas@euspacetech.com';
+const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}`;
 
 const activationErrorKeys = {
   [ACTIVATION_ERROR_CODES.INVALID_MOBILE]: {
@@ -162,13 +165,20 @@ const ActivationScreen = ({ navigation }) => {
     }
   };
 
+  const handleSupportEmailPress = () => {
+    Linking.openURL(SUPPORT_MAILTO).catch(() => {});
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.arcTopRight} />
       <View style={styles.arcBottomLeft} />
 
       <KeyboardAvoidingView
-        style={styles.keyboardAvoid}
+        style={[
+          styles.keyboardAvoid,
+          { paddingBottom: Math.max(insets.bottom, Spacing.lg) + 56 },
+        ]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
@@ -226,7 +236,30 @@ const ActivationScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
+
+        <View style={styles.helpSection}>
+          <Text style={styles.helpTitle}>{t('needHelp')}</Text>
+          <TouchableOpacity
+            onPress={handleSupportEmailPress}
+            activeOpacity={0.75}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel={SUPPORT_EMAIL}
+          >
+            <Text style={styles.helpEmail}>{SUPPORT_EMAIL}</Text>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
+
+      <View
+        style={[
+          styles.screenFooter,
+          { paddingBottom: Math.max(insets.bottom, Spacing.lg) },
+        ]}
+      >
+        <Text style={styles.versionText}>{t('versionLabel')}</Text>
+        <Text style={styles.poweredByText}>{t('poweredByFooter')}</Text>
+      </View>
 
       {toastMessage ? (
         <Animated.View
@@ -369,6 +402,54 @@ const styles = StyleSheet.create({
     fontSize: Typography.buttonText.fontSize,
     letterSpacing: Typography.buttonText.letterSpacing,
     color: Colors.primary,
+  },
+  helpSection: {
+    width: CARD_WIDTH,
+    marginTop: Spacing.xl,
+    alignItems: 'center',
+  },
+  helpTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: Colors.textInverse,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  helpEmail: {
+    fontFamily: FontFamily.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.textInverse,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    opacity: 0.95,
+  },
+  screenFooter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 18,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  versionText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    lineHeight: 18,
+    color: Colors.textInverse,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  poweredByText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    lineHeight: 16,
+    color: Colors.textInverse,
+    textAlign: 'center',
+    opacity: 0.75,
   },
   toast: {
     position: 'absolute',

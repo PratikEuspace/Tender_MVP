@@ -8,6 +8,7 @@ export { default as LargeToggleSwitch } from './LargeToggleSwitch';
 export { default as Navigationcard } from './Navigationcard';
 export { default as Notificationbutton } from './Notificationbutton';
 export { default as PrimaryButton } from './PrimaryButton';
+export { default as OnboardingNoticeModal } from './onboarding/OnboardingNoticeModal';
 export { default as Settingsdrawer } from './Settingsdrawer';
 export { default as StatusChip } from './Statuschip';
 export { default as StatusChipGroup } from './Statuschipgroup';

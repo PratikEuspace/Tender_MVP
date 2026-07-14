@@ -11,6 +11,7 @@ import enCommon from './locales/en/common.json';
 import enCorrespondence from './locales/en/correspondence.json';
 import enDashboard from './locales/en/dashboard.json';
 import enNavigation from './locales/en/navigation.json';
+import enOnboarding from './locales/en/onboarding.json';
 import enReports from './locales/en/reports.json';
 import enSettings from './locales/en/settings.json';
 import enWorks from './locales/en/works.json';
@@ -22,6 +23,7 @@ import mrCommon from './locales/mr/common.json';
 import mrCorrespondence from './locales/mr/correspondence.json';
 import mrDashboard from './locales/mr/dashboard.json';
 import mrNavigation from './locales/mr/navigation.json';
+import mrOnboarding from './locales/mr/onboarding.json';
 import mrReports from './locales/mr/reports.json';
 import mrSettings from './locales/mr/settings.json';
 import mrWorks from './locales/mr/works.json';
@@ -39,6 +41,7 @@ const resources = {
     reports: enReports,
     correspondence: enCorrespondence,
     auth: enAuth,
+    onboarding: enOnboarding,
     workflow: enWorkflow,
     errors: enErrors,
     help: enHelp,
@@ -52,6 +55,7 @@ const resources = {
     reports: mrReports,
     correspondence: mrCorrespondence,
     auth: mrAuth,
+    onboarding: mrOnboarding,
     workflow: mrWorkflow,
     errors: mrErrors,
     help: mrHelp,
@@ -67,6 +71,7 @@ const NAMESPACES = [
   'reports',
   'correspondence',
   'auth',
+  'onboarding',
   'workflow',
   'errors',
   'help',

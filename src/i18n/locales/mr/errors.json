@@ -19,8 +19,8 @@
     "limitReachedTitle": "मर्यादा गाठली",
     "limitReachedPhotos": "तुम्ही कमाल {{max}} फोटो अपलोड करू शकता.",
     "rebuildTitle": "पुन्हा बिल्ड आवश्यक",
-    "rebuildDocument": "दस्तऐवज अपलोडसाठी नेटिव्ह बिल्ड आवश्यक आहे. अॅप थांबवा, नंतर चालवा:\n\nnpx expo run:android",
-    "rebuildGeneric": "अॅप थांबवा, नंतर चालवा:\n\nnpx expo run:android"
+    "rebuildDocument": "दस्तऐवज अपलोडसाठी नेटिव्ह बिल्ड आवश्यक आहे. ॲप थांबवा, नंतर चालवा:\n\nnpx expo run:android",
+    "rebuildGeneric": "ॲप थांबवा, नंतर चालवा:\n\nnpx expo run:android"
   },
   "uploadDocument": {
     "fileUploaded": "फाइल अपलोड केली",

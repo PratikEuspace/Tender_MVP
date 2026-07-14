@@ -109,8 +109,13 @@
   },
   "subscription": {
     "title": "Subscription Status",
+    "screenTitle": "Subscription Status",
+    "statusLabel": "Subscription Status",
+    "validityLabel": "Subscription Validity",
     "active": "Active",
     "inactive": "Not activated",
+    "expired": "Expired",
+    "noValidity": "No remaining validity",
     "expiresOn": "Expires {{date}}",
     "expiredOn": "Expired on {{date}}",
     "timeLeft": "{{time}}"
@@ -125,7 +130,23 @@
   },
   "help": {
     "title": "Help & Guide",
-    "subtitle": "App usage instructions"
+    "subtitle": "App usage instructions",
+    "needHelp": "Need help?",
+    "guide": {
+      "title": "How to Use Ward Vikas",
+      "steps": {
+        "1": "Activate the application using your registered mobile number and subscription key.",
+        "2": "Create a new work from the Add Work section.",
+        "3": "Enter all required work details and tender information.",
+        "4": "Update the work status as the project progresses.",
+        "5": "Upload site photos and supporting documents whenever required.",
+        "6": "All work records, photos, and documents are stored locally on your device.",
+        "7": "Use Export Backup to generate a ZIP file containing all application data.",
+        "8": "Use Restore Backup on another device to restore the complete application data from the ZIP file.",
+        "9": "Generate PDF Reports to view work details and summaries for each Financial Year.",
+        "10": "Regularly create backups to avoid losing data if the device is lost or reset."
+      }
+    }
   },
   "tooltipDemo": {
     "hint": "Tap ⓘ next to a label to see contextual help. Tap outside to close. Includes Inputboxfield and FormToggleField demos.",

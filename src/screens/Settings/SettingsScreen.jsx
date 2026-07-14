@@ -1,7 +1,8 @@
 // Settings — includes language picker (Phase 2 i18n)
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useCallback, useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -23,8 +24,6 @@ import {
     inspectBackupArchiveFile,
     pickBackupArchiveFile,
 } from '../../services/backup/backupImportService';
-import { isSubscriptionExpired } from '../../services/subscriptionService';
-import useAuthStore from '../../store/useAuthStore';
 import useDraftStore from '../../store/useDraftStore';
 import useWorkStore from '../../store/useWorkStore';
 import {
@@ -39,10 +38,6 @@ import {
     resolveBackupErrorMessage,
 } from '../../utils/backupUiUtils';
 import { performLogout } from '../../utils/logout';
-import {
-    formatSubscriptionExpiryDate,
-    getSubscriptionTimeLeftText,
-} from '../../utils/subscriptionDisplay';
 
 const ICON_COLOR = '#555555';
 const ICON_SIZE = 22;
@@ -56,40 +51,16 @@ const SettingsSection = ({ title, children }) => (
 
 const SettingsScreen = () => {
   const { t, i18n } = useTranslation('settings');
+  const navigation = useNavigation();
   const { showConfirmation, showSuccess, showError, showWarning, showInfo } = useAppDialog();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [backupProgress, setBackupProgress] = useState(null);
 
-  const isActivated = useAuthStore((state) => state.isActivated);
-  const expiresAt = useAuthStore((state) => state.expiresAt);
   const refreshWorks = useWorkStore((state) => state.refreshWorks);
   const clearCurrentWork = useWorkStore((state) => state.clearCurrentWork);
   const clearAllDrafts = useDraftStore((state) => state.clearAllDrafts);
 
   const backupBusy = backupProgress != null;
-
-  const subscriptionSubtitle = useMemo(() => {
-    if (!isActivated || !expiresAt) {
-      return t('subscription.inactive');
-    }
-
-    const expired = isSubscriptionExpired(expiresAt);
-    const dateLabel = formatSubscriptionExpiryDate(
-      expiresAt,
-      i18n.language === 'mr' ? 'mr-IN' : 'en-IN',
-    );
-    const timeLeft = getSubscriptionTimeLeftText(expiresAt);
-
-    if (expired) {
-      return t('subscription.expiredOn', { date: dateLabel });
-    }
-
-    if (timeLeft) {
-      return `${t('subscription.active')} · ${t('subscription.timeLeft', { time: timeLeft })}`;
-    }
-
-    return `${t('subscription.active')} · ${t('subscription.expiresOn', { date: dateLabel })}`;
-  }, [isActivated, expiresAt, i18n.language, t]);
 
   const showExportSuccess = useCallback(
     (result) => {
@@ -351,9 +322,8 @@ const SettingsScreen = () => {
 
         <SettingsSection title={t('sections.account')}>
           <NavigationCard
-            interactive={false}
             title={t('subscription.title')}
-            subtitle={subscriptionSubtitle}
+            onPress={() => navigation.navigate('SubscriptionStatus')}
             leftIcon={
               <Ionicons name="star-outline" size={ICON_SIZE} color={ICON_COLOR} />
             }
@@ -370,9 +340,9 @@ const SettingsScreen = () => {
 
         <SettingsSection title={t('sections.support')}>
           <NavigationCard
-            interactive={false}
             title={t('help.title')}
             subtitle={t('help.subtitle')}
+            onPress={() => navigation.navigate('HelpGuide')}
             leftIcon={
               <Ionicons name="help-circle-outline" size={ICON_SIZE} color={ICON_COLOR} />
             }

@@ -8,6 +8,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -75,7 +76,7 @@ const DocumentTypeLabel = ({ title, style }) => (
     ]}
   >
     <DocumentFileIcon size={18} color="#666666" />
-    <Text style={styles.fieldLabel} numberOfLines={2}>
+    <Text style={styles.fieldLabel} numberOfLines={1}>
       {title}
     </Text>
   </View>
@@ -183,7 +184,9 @@ const DashedUploadBox = ({
       ) : (
         <View style={styles.uploadInner}>
           <Feather name="upload" size={UPLOAD_BOX.iconSize} color={UPLOAD_BOX.borderColor} />
-          <Text style={styles.uploadLabel}>{uploadText}</Text>
+          <Text style={styles.uploadLabel} numberOfLines={1}>
+            {uploadText}
+          </Text>
         </View>
       )}
     </TouchableOpacity>
@@ -309,12 +312,20 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: FORM_FIELD_TEXT_COLOR,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: 'center',
+      },
+      default: {},
+    }),
   },
   fieldUploadAction: {
     fontSize: FORM_FIELD_FONT_SIZE,
     fontWeight: '600',
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: PRIMARY,
+    flexShrink: 0,
   },
   uploadGrid: {
     flexDirection: 'row',
@@ -361,7 +372,14 @@ const styles = StyleSheet.create({
     fontFamily: theme.FontFamily?.regular ?? undefined,
     color: UPLOAD_BOX.labelColor,
     textAlign: 'center',
-    flexShrink: 1,
+    width: '100%',
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: 'center',
+      },
+      default: {},
+    }),
   },
   uploadedRow: {
     flexDirection: 'row',

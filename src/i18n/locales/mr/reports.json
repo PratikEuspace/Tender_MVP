@@ -33,6 +33,7 @@
   "export": {
     "sectionTitle": "अहवाल निर्यात",
     "pdf": "PDF निर्यात",
+    "pdfSubtitle": "सविस्तर आर्थिक वर्ष काम अहवाल तयार करा",
     "excel": "Excel निर्यात",
     "pdfReportTitle": "आर्थिक वर्ष अहवाल",
     "hybridReportTitle": "PMC टेंडर ट्रॅकर — आर्थिक वर्ष अहवाल",

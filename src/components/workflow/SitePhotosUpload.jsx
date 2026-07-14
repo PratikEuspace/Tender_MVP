@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -68,7 +69,14 @@ const AddPhotoCard = ({ onPress, loading, label }) => (
     ) : (
       <>
         <CameraIcon />
-        <Text style={styles.addText}>{label}</Text>
+        <Text
+          style={styles.addText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+        >
+          {label}
+        </Text>
       </>
     )}
   </Pressable>
@@ -148,10 +156,12 @@ const SitePhotosUpload = ({
   return (
     <View style={[styles.section, style]}>
       <View style={styles.headerRow}>
-        <Text style={styles.label}>{resolvedSectionLabel}</Text>
+        <Text style={styles.label} numberOfLines={1}>
+          {resolvedSectionLabel}
+        </Text>
         {count > 0 ? (
           <View style={styles.countBadge}>
-            <Text style={styles.countBadgeText}>
+            <Text style={styles.countBadgeText} numberOfLines={1}>
               {t('site.uploadedCount', { count })}
             </Text>
           </View>
@@ -198,25 +208,41 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 12,
   },
   label: {
     ...formFieldStyles.sectionLabel,
     flexShrink: 1,
+    flexGrow: 1,
+    minWidth: 0,
+    marginBottom: 0,
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: 'center',
+      },
+      default: {},
+    }),
   },
   countBadge: {
     backgroundColor: PRIMARY,
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    flexShrink: 0,
   },
   countBadgeText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
     lineHeight: 16,
+    ...Platform.select({
+      android: { includeFontPadding: false },
+      default: {},
+    }),
   },
   photoRow: {
     paddingVertical: 2,
@@ -261,12 +287,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 6,
   },
   addText: {
     fontSize: 13,
     fontWeight: '500',
     color: '#6B7280',
     lineHeight: 16,
+    textAlign: 'center',
+    width: '100%',
+    ...Platform.select({
+      android: {
+        includeFontPadding: false,
+        textAlignVertical: 'center',
+      },
+      default: {},
+    }),
   },
   helperRow: {
     flexDirection: 'row',

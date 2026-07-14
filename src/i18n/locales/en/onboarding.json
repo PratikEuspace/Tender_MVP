@@ -1,0 +1,34 @@
+{
+  "splash": {
+    "brandName": "Ward Vikas",
+    "tagline": "Smart Tender Management System",
+    "poweredBy": "Powered by Euspace Technologies",
+    "loading": "Loading..."
+  },
+  "welcome": {
+    "greeting": "Welcome to",
+    "brandName": "Ward Vikas",
+    "subtitle": "Track every government work\nfrom proposal to completion.",
+    "features": {
+      "offlineFirst": "Offline First",
+      "secureStorage": "Secure Local Storage",
+      "workflowTracking": "Tender Workflow Tracking",
+      "fyReports": "Financial Year Reports"
+    },
+    "continue": "Continue"
+  },
+  "dataStorage": {
+    "title": "Data Storage Notice",
+    "body": "All work data entered in this app is stored locally on your device.\n\nYour records stay on this phone or tablet. They are not uploaded to a cloud server by this app.\n\nPlease read this notice carefully. You must acknowledge both statements below to continue.",
+    "understand": "I Understand",
+    "agree": "I Agree",
+    "privacyLink": "Data Storage & Privacy Notice",
+    "termsLink": "Terms & Conditions",
+    "privacyTitle": "Data Storage & Privacy Notice",
+    "termsTitle": "Terms & Conditions",
+    "privacyBody": "Ward Vikas is an offline-first application.\n\n• All work records, tender details and uploaded documents are stored locally on your device.\n\n• Your data is not uploaded to a public cloud server by this application.\n\n• Only minimal information, such as your mobile number and activation details, may be used to validate your subscription.\n\n• You are responsible for creating regular backups of your data. If your device is lost, damaged, or reset without a backup, your records may not be recoverable.\n\n• By continuing, you acknowledge that you understand how your data is stored and managed within the application.",
+    "termsBody": "By using Ward Vikas, you agree to the following:\n\n• The application is licensed only for the active subscription period.\n\n• You are responsible for the accuracy of all work and tender information entered into the application.\n\n• Reverse engineering, unauthorized copying, redistribution, or misuse of the application is prohibited.\n\n• Euspace Technologies is not responsible for decisions made using incorrect or incomplete data entered by users.\n\n• Continued use of the application indicates your acceptance of these Terms & Conditions.",
+    "close": "Close",
+    "continue": "Continue"
+  }
+}

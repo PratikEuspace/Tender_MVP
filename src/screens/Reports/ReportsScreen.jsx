@@ -5,17 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
-import NotificationButton from '../../components/Notificationbutton';
 import FinancialYearDropdown from '../../components/dashboard/FinancialYearDropdown';
 import { workCompletedToChipStatus } from '../../components/Statuschip';
 import useWorkStore from '../../store/useWorkStore';
-import theme from '../../theme';
 import ReportCategoryChipRow from '../../components/reports/ReportCategoryChipRow';
 import ReportStatCard from '../../components/reports/ReportStatCard';
 import ReportInfoBanner from '../../components/reports/ReportInfoBanner';
 import ReportBudgetCard from '../../components/reports/ReportBudgetCard';
 import ReportExportSection from '../../components/reports/ReportExportSection';
-import ReportShareCard from '../../components/reports/ReportShareCard';
 import { useAppDialog } from '../../context/AppDialogProvider';
 import { translateBudgetSummary } from '../../i18n/reportLabels';
 import {
@@ -136,18 +133,9 @@ const ReportsScreen = () => {
       <ScreenLayout
         title={t('title')}
         showMenu
-        showNotification={false}
         scrollable
         onMenuPress={() => setDrawerOpen(true)}
-        headerRight={
-          <View style={styles.headerRight}>
-            <FinancialYearDropdown value={fy} onChange={handleFyChange} />
-            <NotificationButton
-              iconColor={theme.Colors.white ?? '#FFFFFF'}
-              iconSize={20}
-            />
-          </View>
-        }
+        headerRight={<FinancialYearDropdown value={fy} onChange={handleFyChange} />}
         contentStyle={styles.scrollContent}
       >
         <ReportCategoryChipRow style={styles.chips} />
@@ -198,8 +186,6 @@ const ReportsScreen = () => {
           onExportPdf={handleExportPdf}
           exportingPdf={exportingPdf}
         />
-
-        <ReportShareCard />
       </ScreenLayout>
 
       <SettingsDrawer
@@ -211,11 +197,6 @@ const ReportsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   scrollContent: {
     paddingTop: 12,
     paddingBottom: 28,

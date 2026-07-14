@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
 
 import { dismissKeyboardAfterClose, dismissKeyboardBeforeOverlay } from '../../utils/keyboardDismiss';
+import {
+  FORM_FIELD_LABEL_LINE_HEIGHT,
+} from '../../theme/formFieldStyles';
 import HelpTooltipContent, {
   HELP_TOOLTIP_MAX_BODY_HEIGHT,
 } from './HelpTooltipContent';
@@ -17,6 +20,8 @@ const HIT_SLOP = { top: 10, bottom: 10, left: 10, right: 10 };
 const POPOVER_MIN_WIDTH = 260;
 const ANCHOR_GAP = 6;
 const CONTENT_HEIGHT = HELP_TOOLTIP_MAX_BODY_HEIGHT + 8;
+/** Match label line height so icon sits on the same optical center as text. */
+const TRIGGER_SIZE = FORM_FIELD_LABEL_LINE_HEIGHT;
 
 const measureInWindowAsync = (node) => new Promise((resolve) => {
   if (!node?.measureInWindow) {
@@ -213,20 +218,22 @@ const FieldHelpTooltip = ({
 
 const styles = StyleSheet.create({
   triggerWrap: {
-    minWidth: 28,
-    minHeight: 28,
+    width: TRIGGER_SIZE,
+    height: TRIGGER_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
+    marginLeft: 6,
+    flexShrink: 0,
   },
   triggerPressable: {
-    minWidth: 28,
-    minHeight: 28,
+    width: TRIGGER_SIZE,
+    height: TRIGGER_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
   localScope: {
     position: 'relative',
+    flexShrink: 0,
   },
 });
 

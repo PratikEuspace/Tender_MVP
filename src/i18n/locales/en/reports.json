@@ -33,6 +33,7 @@
   "export": {
     "sectionTitle": "Export Report",
     "pdf": "Export PDF",
+    "pdfSubtitle": "Generate a detailed financial year work report",
     "excel": "Export Excel",
     "pdfReportTitle": "Financial Year Report",
     "hybridReportTitle": "PMC Tender Tracker — Financial Year Report",
