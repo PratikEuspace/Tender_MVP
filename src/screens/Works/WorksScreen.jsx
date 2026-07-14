@@ -36,11 +36,10 @@ import theme from '../../theme';
 
 const CARD_MARGIN_H = 16;
 const PANEL_WIDTH = 97;
-
-const PANEL_VISUAL_WIDTH = PANEL_WIDTH + CARD_MARGIN_H;
-
+const CARD_RADIUS = theme.Radius?.md ?? 8;
 const THRESHOLD = PANEL_WIDTH * 0.5;
 const PRIMARY = theme.Colors?.primary ?? '#062E52';
+const PRESS_LOCK_RELEASE_MS = 60;
 
 const formatBudget = (budget) => {
   const n = Number(budget) || 0;
@@ -61,19 +60,54 @@ function SwipeableDeleteRow({
 }) {
   const translateX = useSharedValue(0);
   const savedX = useSharedValue(0);
+  const [pressLocked, setPressLocked] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const releaseTimerRef = useRef(null);
+
+  const clearReleaseTimer = useCallback(() => {
+    if (releaseTimerRef.current) {
+      clearTimeout(releaseTimerRef.current);
+      releaseTimerRef.current = null;
+    }
+  }, []);
+
+  const lockPress = useCallback(() => {
+    clearReleaseTimer();
+    setPressLocked(true);
+  }, [clearReleaseTimer]);
+
+  const unlockPressSoon = useCallback(() => {
+    clearReleaseTimer();
+    releaseTimerRef.current = setTimeout(() => {
+      setPressLocked(false);
+      releaseTimerRef.current = null;
+    }, PRESS_LOCK_RELEASE_MS);
+  }, [clearReleaseTimer]);
 
   const close = useCallback(() => {
     translateX.value = withSpring(0);
+    setIsOpen(false);
   }, [translateX]);
 
   useEffect(() => {
     registerClose?.(workId, close);
-    return () => registerClose?.(workId, null);
-  }, [close, registerClose, workId]);
+    return () => {
+      registerClose?.(workId, null);
+      clearReleaseTimer();
+    };
+  }, [clearReleaseTimer, close, registerClose, workId]);
 
   const notifyOpen = useCallback(() => {
     onOpen?.(workId);
   }, [onOpen, workId]);
+
+  const handleSnapOpen = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+
+  const handleSnapClosed = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   const pan = useMemo(
     () =>
@@ -82,7 +116,9 @@ function SwipeableDeleteRow({
         .failOffsetY([-10, 10])
         .enabled(!disabled)
         .onStart(() => {
+          // Lock only after horizontal pan activates — do not block plain taps.
           savedX.value = translateX.value;
+          runOnJS(lockPress)();
           runOnJS(notifyOpen)();
         })
         .onUpdate((event) => {
@@ -93,25 +129,47 @@ function SwipeableDeleteRow({
         .onEnd(() => {
           if (translateX.value < -THRESHOLD) {
             translateX.value = withSpring(-PANEL_WIDTH);
+            runOnJS(handleSnapOpen)();
           } else {
             translateX.value = withSpring(0);
+            runOnJS(handleSnapClosed)();
           }
+        })
+        .onFinalize(() => {
+          runOnJS(unlockPressSoon)();
         }),
-    [disabled, notifyOpen, savedX, translateX],
+    [
+      disabled,
+      handleSnapClosed,
+      handleSnapOpen,
+      lockPress,
+      notifyOpen,
+      savedX,
+      translateX,
+      unlockPressSoon,
+    ],
+  );
+
+  // Let the card TouchableOpacity receive taps; pan still wins after activeOffsetX.
+  const composedGesture = useMemo(
+    () => Gesture.Simultaneous(pan, Gesture.Native()),
+    [pan],
   );
 
   const cardAnimStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
 
+  // Panel stays fully opaque behind the card — covered until the card slides.
+  // Avoids margin-gutter blue flash from opacity fade-in.
   const rightPanelAnimStyle = useAnimatedStyle(() => ({
-    opacity:
-      translateX.value < 0 ? Math.min(-translateX.value / PANEL_WIDTH, 1) : 0,
+    opacity: translateX.value < -0.5 ? 1 : 0,
   }));
 
   return (
     <View style={swipeStyles.row}>
       <Animated.View
+        pointerEvents={isOpen ? 'auto' : 'none'}
         style={[swipeStyles.panel, swipeStyles.panelRight, rightPanelAnimStyle]}
       >
         <TouchableOpacity
@@ -125,33 +183,46 @@ function SwipeableDeleteRow({
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
         >
-          <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
+          <Ionicons name="trash-outline" size={28} color={PRIMARY} />
           <Text style={swipeStyles.panelLabel}>{deleteLabel}</Text>
         </TouchableOpacity>
       </Animated.View>
 
-      <GestureDetector gesture={pan}>
-        <Animated.View style={cardAnimStyle}>{children}</Animated.View>
+      <GestureDetector gesture={composedGesture}>
+        <Animated.View style={cardAnimStyle}>
+          {typeof children === 'function'
+            ? children({ pressLocked, isOpen, close })
+            : children}
+        </Animated.View>
       </GestureDetector>
     </View>
   );
 }
 
-const WorkListCard = ({ work, onPress, t }) => {
+const WorkListCard = ({ work, onPress, pressLocked = false, isOpen = false, onRequestClose, t }) => {
   const chipStatus = workCompletedToChipStatus(work.work_completed);
   const meta = [work.ward, work.department].filter(Boolean).join(' | ');
+
+  const handlePress = () => {
+    if (pressLocked) return;
+    if (isOpen) {
+      onRequestClose?.();
+      return;
+    }
+    onPress?.();
+  };
 
   return (
     <TouchableOpacity
       style={styles.card}
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={0.72}
       accessibilityRole="button"
       accessibilityLabel={t('works:openWorkAccessibility', {
         name: work.work_name || t('common:untitledWork'),
       })}
     >
-      <View style={styles.cardRow}>
+      <View style={styles.cardRow} pointerEvents="none">
         <View style={styles.cardBody}>
           <Text style={styles.cardTitle} numberOfLines={2}>
             {work.work_name || t('common:untitledWork')}
@@ -304,7 +375,16 @@ const WorksScreen = ({ navigation }) => {
         })}
         registerClose={registerClose}
       >
-        <WorkListCard work={item} onPress={() => handleOpenWork(item)} t={t} />
+        {({ pressLocked, isOpen, close }) => (
+          <WorkListCard
+            work={item}
+            onPress={() => handleOpenWork(item)}
+            pressLocked={pressLocked}
+            isOpen={isOpen}
+            onRequestClose={close}
+            t={t}
+          />
+        )}
       </SwipeableDeleteRow>
     ),
     [
@@ -381,16 +461,25 @@ const swipeStyles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     bottom: 0,
-    width: PANEL_VISUAL_WIDTH ,
+    // Wider than the swipe distance so it always reaches the card's edge —
+    // CARD_MARGIN_H absorbs the card's own margin, and CARD_RADIUS absorbs
+    // the card's rounded-corner cutout (a rounded corner leaves a small
+    // unfilled sliver at the curve; without this the row's plain background
+    // shows through there instead of the panel).
+    width: PANEL_WIDTH + CARD_MARGIN_H + CARD_RADIUS,
     justifyContent: 'center',
     alignItems: 'center',
     gap: theme.Spacing?.xs ?? 6,
+    borderWidth: 1,
+    borderColor: "#F0FFFF",
   },
   panelRight: {
     right: 0,
-    backgroundColor: PRIMARY,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
+    backgroundColor: "#F0FFFF",
+    // No radius here on purpose: the panel is a flat rectangle sitting
+    // behind the card. The card's own rounded corner + border is the only
+    // curve in the composition, so it merges seamlessly with the panel
+    // instead of two independent curves fighting for the same seam.
   },
   panelTouchable: {
     flex: 1,
@@ -400,7 +489,7 @@ const swipeStyles = StyleSheet.create({
     gap: theme.Spacing?.xs ?? 6,
   },
   panelLabel: {
-    color: theme.Colors?.white ?? '#FFFFFF',
+    color: PRIMARY,
     fontSize: theme.FontSize?.sm ?? 14,
     fontFamily: theme.FontFamily?.medium,
     fontWeight: theme.FontWeight?.medium ?? '500',
@@ -424,13 +513,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: CARD_MARGIN_H,
   },
   card: {
-    marginHorizontal: CARD_MARGIN_H,
     backgroundColor: theme.Colors?.white ?? '#FFFFFF',
     borderWidth: 0.5,
     borderColor: '#000000',
-    borderRadius: theme.Radius?.md ?? 8,
+    borderRadius: CARD_RADIUS,
     paddingVertical: 10,
     paddingHorizontal: 12,
+    marginHorizontal: CARD_MARGIN_H,
   },
   cardRow: {
     flexDirection: 'row',
