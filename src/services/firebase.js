@@ -1,20 +1,21 @@
 // src/services/firebase.js
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, query, orderByChild, equalTo, get } from 'firebase/database';
+import { equalTo, get, getDatabase, orderByChild, query, ref } from 'firebase/database';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAln62Yu3Hy9ILrqUpLGsxkbe6DXtSTVO0",
-  authDomain: "subscription-system-tenderapp.firebaseapp.com",
-  databaseURL: "https://subscription-system-tenderapp-default-rtdb.firebaseio.com",
-  projectId: "subscription-system-tenderapp",
-  storageBucket: "subscription-system-tenderapp.firebasestorage.app",
-  messagingSenderId: "936772760561",
-  appId: "1:936772760561:web:012d9540d051237d964a50"
+  apiKey: "AIzaSyBNMxu5-yeGYfbx4QLpkz9DkP4RSoIa3xo",
+  authDomain: "work-management-568ab.firebaseapp.com",
+  databaseURL: "https://work-management-568ab-default-rtdb.firebaseio.com/",
+  projectId: "work-management-568ab",
+  storageBucket: "work-management-568ab.firebasestorage.app",
+  messagingSenderId: "399716633301",
+  appId: "1:399716633301:web:4e57c03c2953a33a22b05c",
+  measurementId: "G-2TVSR7YWFC",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-export { db, ref, query, orderByChild, equalTo, get };
+export { db, equalTo, get, orderByChild, query, ref };
 export default db;
