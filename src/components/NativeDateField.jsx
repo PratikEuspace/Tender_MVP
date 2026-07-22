@@ -29,10 +29,9 @@ const NativeDateField = ({
   const [showPicker, setShowPicker] = useState(false);
   const displayValue = formatDateForStorage(value);
 
-  const handleAndroidChange = useCallback(
-    (event, selectedDate) => {
+  const handleValueChange = useCallback(
+    (_event, selectedDate) => {
       setShowPicker(false);
-      if (event?.type === 'dismissed') return;
       if (selectedDate) {
         onDateChange?.(selectedDate);
       }
@@ -40,25 +39,15 @@ const NativeDateField = ({
     [onDateChange],
   );
 
-  const handleIosChange = useCallback(
-    (_event, selectedDate) => {
-      if (selectedDate) {
-        onDateChange?.(selectedDate);
-        setShowPicker(false);
-      }
-    },
-    [onDateChange],
-  );
+  const handleDismiss = useCallback(() => {
+    setShowPicker(false);
+  }, []);
 
   const openPicker = useCallback(() => {
     if (!disabled) {
       setShowPicker(true);
     }
   }, [disabled]);
-
-  const closeIosPicker = useCallback(() => {
-    setShowPicker(false);
-  }, []);
 
   return (
     <>
@@ -82,7 +71,8 @@ const NativeDateField = ({
           display="default"
           minimumDate={minimumDate}
           maximumDate={maximumDate}
-          onChange={handleAndroidChange}
+          onValueChange={handleValueChange}
+          onDismiss={handleDismiss}
         />
       ) : null}
       {showPicker && !disabled && Platform.OS === 'ios' ? (
@@ -90,17 +80,18 @@ const NativeDateField = ({
           visible
           transparent
           animationType="fade"
-          onRequestClose={closeIosPicker}
+          onRequestClose={handleDismiss}
         >
-          <Pressable style={iosStyles.overlay} onPress={closeIosPicker}>
+          <Pressable style={iosStyles.overlay} onPress={handleDismiss}>
             <View style={iosStyles.sheet} onStartShouldSetResponder={() => true}>
               <DateTimePicker
                 value={parseStoredDateForPicker(value)}
                 mode="date"
                 display="inline"
+                themeVariant="light"
                 minimumDate={minimumDate}
                 maximumDate={maximumDate}
-                onChange={handleIosChange}
+                onValueChange={handleValueChange}
                 style={iosStyles.picker}
               />
             </View>

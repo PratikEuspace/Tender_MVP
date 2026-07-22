@@ -31,6 +31,7 @@
     "removePhotoTitle": "Remove photo",
     "removePhotoMessage": "Remove this photo from site progress?",
     "removeInaugurationPhotoMessage": "Remove this inauguration photo?",
+    "expectedCompletionBeforeStart": "Expected completion date cannot be earlier than the work order date.",
     "cancel": "Cancel",
     "remove": "Remove",
     "replace": "Replace"
@@ -143,6 +144,7 @@
     },
     "estimation": {
       "title": "Estimation",
+      "progressTitle": "Estimation",
       "screenTitle": "Estimation",
       "description": "Confirm estimation status",
       "progressDescription": "Confirm estimation status",
@@ -189,6 +191,7 @@
     },
     "reTender": {
       "title": "Re-Tender (Optional)",
+      "progressTitle": "Re-Tender (Optional)",
       "screenTitle": "Re-Tender (Optional)",
       "description": "Re-tender if original tender failed",
       "progressDescription": "Re-tender if original tender failed",

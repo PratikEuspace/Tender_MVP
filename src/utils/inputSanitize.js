@@ -58,6 +58,14 @@ export const sanitizeDecimal = (value) => {
 export const sanitizeDigitsOnly = (value) =>
   String(value ?? '').replace(/\D/g, '');
 
+export const MOBILE_NUMBER_LENGTH = 10;
+
+/** True when empty or exactly 10 digits (optional field; partial input is invalid). */
+export const isValidTenDigitMobile = (value) => {
+  const len = sanitizeDigitsOnly(value).length;
+  return len === 0 || len === MOBILE_NUMBER_LENGTH;
+};
+
 const SANITIZERS_BY_TYPE = {
   textOnly: sanitizeTextOnly,
   alphanumeric: sanitizeAlphanumeric,

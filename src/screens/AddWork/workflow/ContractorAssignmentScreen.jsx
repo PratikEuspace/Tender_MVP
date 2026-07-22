@@ -33,6 +33,7 @@ import { getTenderAmountByWorkId } from '../../../db/repositories/tendersReposit
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { isValidTenDigitMobile } from '../../../utils/inputSanitize';
 import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
@@ -206,6 +207,11 @@ const ContractorAssignmentScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
+    if (!isValidTenDigitMobile(form.contractor_contact)) {
+      showWorkflowValidationFail(t('invalidMobileMessage', { ns: 'auth' }));
+      return;
+    }
+
     saveAndContinue(form, navigation, {
       onValidationFail: showWorkflowValidationFail,
     });

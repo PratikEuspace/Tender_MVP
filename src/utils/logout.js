@@ -14,7 +14,10 @@ export const performLogout = () => {
     confirmText: tSettings('logout.confirmButton'),
     onConfirm: () => {
       useAuthStore.getState().clearSession();
-      resetToActivation();
+      // Defer nav reset so AppDialog Modal can dismiss first (iOS UIKit).
+      setTimeout(() => {
+        resetToActivation();
+      }, 300);
     },
   });
 };

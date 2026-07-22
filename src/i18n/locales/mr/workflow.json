@@ -31,6 +31,7 @@
     "removePhotoTitle": "फोटो काढा",
     "removePhotoMessage": "साइट प्रगतीतून हा फोटो काढायचा?",
     "removeInaugurationPhotoMessage": "हा उद्घाटन फोटो काढायचा?",
+    "expectedCompletionBeforeStart": "अपेक्षित पूर्णता दिनांक काम आदेश दिनांकापूर्वी असू शकत नाही.",
     "cancel": "रद्द करा",
     "remove": "काढा",
     "replace": "बदला"

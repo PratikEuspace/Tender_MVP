@@ -21,6 +21,7 @@ import { getWorkById, upsertWorkDetails } from '../../../db/repositories/worksRe
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
+import { isValidTenDigitMobile } from '../../../utils/inputSanitize';
 import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
     getStepProgressDescription,
@@ -155,6 +156,11 @@ const WorkDetailsScreen = ({ navigation }) => {
   );
 
   const handleSave = () => {
+    if (!isValidTenDigitMobile(form.officer_mobile)) {
+      showWorkflowValidationFail(t('invalidMobileMessage', { ns: 'auth' }));
+      return;
+    }
+
     saveAndContinue(form, navigation, {
       onValidationFail: showWorkflowValidationFail,
     });

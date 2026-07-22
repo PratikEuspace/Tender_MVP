@@ -4,7 +4,7 @@
 
 import { getDB } from '../database';
 import { computeFinalTenderAmount } from '../../utils/finalTenderAmount';
-import { getTenderAmountByWorkId } from './tendersRepository';
+import { getTenderAmountByWorkId, getTenderByWorkId } from './tendersRepository';
 
 const VALID_ESTIMATE_TYPES = new Set(['above', 'below']);
 
@@ -104,6 +104,15 @@ export const upsertContractorAssignment = (workId, data = {}) => {
     computedFinal ?? parseAmount(final_tender_amount);
 
   if (!existing) {
+    let tender = getTenderByWorkId(workId);
+    if (!tender?.id) {
+      db.runSync(`INSERT INTO tenders (work_id, status) VALUES (?, 'Closed');`, [workId]);
+      tender = getTenderByWorkId(workId);
+    }
+    if (!tender?.id) {
+      throw new Error('upsertContractorAssignment: could not resolve tender_id');
+    }
+
     db.runSync(
       `INSERT INTO contractors
          (work_id, tender_id, contractor_name, contractor_contact,
@@ -112,7 +121,7 @@ export const upsertContractorAssignment = (workId, data = {}) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         workId,
-        workId,
+        tender.id,
         contractor_name,
         contractor_contact,
         percentage_above_below,

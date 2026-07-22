@@ -21,6 +21,9 @@ import theme from '../theme';
 import { FIGMA_HEADER_ICON_SIZE, FigmaMenuIcon } from './icons/HeaderIcons';
 import { performLogout } from '../utils/logout';
 
+/** Pause after drawer Modal dismiss before presenting confirmation (iOS). */
+const LOGOUT_DIALOG_DELAY_MS = 100;
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const DRAWER_WIDTH = Math.min(260, SCREEN_WIDTH * 0.72);
 /** Remaining width available for outside-tap dismiss (SCREEN_WIDTH - DRAWER_WIDTH). */
@@ -43,6 +46,7 @@ const MENU_ITEMS = [
 // Renders inside Modal's SafeAreaProvider so insets are available on first open.
 const DrawerPanel = ({
   onClose,
+  onLogoutPress,
   onBackupPress,
   onRestorePress,
   onSubscriptionPress,
@@ -67,8 +71,7 @@ const DrawerPanel = ({
 
   const handleItemPress = (item) => {
     if (item.action === 'logout') {
-      performLogout();
-      onClose?.();
+      onLogoutPress?.();
       return;
     }
 
@@ -198,6 +201,18 @@ const SettingsDrawer = ({
     });
   }, [modalVisible, onClose, runCloseAnimation]);
 
+  /** Close drawer Modal fully, then show logout confirmation (avoids iOS dual-Modal crash). */
+  const handleLogoutPress = useCallback(() => {
+    if (!modalVisible || isAnimatingRef.current) return;
+
+    runCloseAnimation(() => {
+      onClose?.();
+      setTimeout(() => {
+        performLogout();
+      }, LOGOUT_DIALOG_DELAY_MS);
+    });
+  }, [modalVisible, onClose, runCloseAnimation]);
+
   useEffect(() => {
     const wasVisible = wasVisibleRef.current;
     wasVisibleRef.current = visible;
@@ -243,6 +258,7 @@ const SettingsDrawer = ({
       <SafeAreaProvider style={styles.modalRoot} initialMetrics={initialWindowMetrics}>
         <DrawerPanel
           onClose={handleCloseRequest}
+          onLogoutPress={handleLogoutPress}
           onBackupPress={onBackupPress}
           onRestorePress={onRestorePress}
           onSubscriptionPress={onSubscriptionPress}

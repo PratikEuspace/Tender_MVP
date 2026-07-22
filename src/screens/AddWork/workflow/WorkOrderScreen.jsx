@@ -23,17 +23,17 @@ import useDocumentUpload from '../../../hooks/useDocumentUpload';
 import useSaveAndContinue from '../../../hooks/useSaveAndContinue';
 import useWorkflowAutoSave from '../../../hooks/useWorkflowAutoSave';
 import useWorkflowStepGuard from '../../../hooks/useWorkflowStepGuard';
-import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 import {
-    getStepProgressDescription,
-    getStepScreenTitle,
-    getStepTitle,
+  getStepProgressDescription,
+  getStepScreenTitle,
+  getStepTitle,
 } from '../../../i18n/workflowLabels';
 import useDraftStore from '../../../store/useDraftStore';
 import useWorkStore from '../../../store/useWorkStore';
 import theme from '../../../theme';
-import { formatDateForStorage } from '../../../utils/dateFormat';
+import { formatDateForStorage, parseStoredDate } from '../../../utils/dateFormat';
 import { buildUploadDocumentEntry } from '../../../utils/documentUploadProps';
+import { showWorkflowValidationFail } from '../../../utils/workflowValidationDialog';
 
 const SCREEN_TYPE = 'workOrder';
 const STEP = 8;
@@ -126,6 +126,17 @@ const WorkOrderScreen = ({ navigation }) => {
     );
 
   const handleSave = () => {
+    const workOrderDate = parseStoredDate(form.work_start_date);
+    const expectedCompletionDate = parseStoredDate(form.expected_completion_date);
+    if (
+      workOrderDate &&
+      expectedCompletionDate &&
+      expectedCompletionDate < workOrderDate
+    ) {
+      showWorkflowValidationFail(t('alerts.expectedCompletionBeforeStart'));
+      return;
+    }
+
     saveAndContinue(form, navigation, {
       onValidationFail: showWorkflowValidationFail,
     });
@@ -182,6 +193,7 @@ const WorkOrderScreen = ({ navigation }) => {
             helpKey="workflow.workOrder.expectedCompletion"
             helpTooltipId="workOrder-expectedCompletion"
             value={form.expected_completion_date}
+            minimumDate={parseStoredDate(form.work_start_date) ?? undefined}
             onDateChange={(v) =>
               updateField('expected_completion_date', formatDateForStorage(v), { immediate: true })
             }

@@ -42,11 +42,14 @@ const ensureTenderRow = (workId) => {
 
 const ensureContractorRow = (workId) => {
   if (getContractorByWorkId(workId)) return;
+  ensureTenderRow(workId);
+  const tender = getTenderByWorkId(workId);
+  if (!tender?.id) return;
   const db = getDB();
   const now = nowIso();
   db.runSync(
     `INSERT INTO contractors (work_id, tender_id, created_at, updated_at) VALUES (?, ?, ?, ?);`,
-    [workId, workId, now, now],
+    [workId, tender.id, now, now],
   );
 };
 
