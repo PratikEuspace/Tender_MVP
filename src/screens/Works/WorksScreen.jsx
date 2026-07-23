@@ -2,7 +2,9 @@
 // Works list — load from SQLite, tap to resume on Add Work hub, swipe left to delete.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   StyleSheet,
@@ -10,8 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -23,11 +23,10 @@ import Animated, {
 import AppToast from '../../components/AppToast';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
-import StatusChip from '../../components/Statuschip';
+import StatusChip, { workCompletedToChipStatus } from '../../components/Statuschip';
 import StatusChipGroup from '../../components/Statuschipgroup';
-import { workCompletedToChipStatus } from '../../components/Statuschip';
-import { useAppDialog } from '../../context/AppDialogProvider';
 import { WORKFLOW_ROUTES } from '../../constants/WorkflowSteps';
+import { useAppDialog } from '../../context/AppDialogProvider';
 import { deleteWorkPermanently } from '../../services/workDeleteService';
 import useDraftStore from '../../store/useDraftStore';
 import useUIStore from '../../store/useUIStore';
@@ -183,7 +182,7 @@ function SwipeableDeleteRow({
           accessibilityRole="button"
           accessibilityLabel={accessibilityLabel}
         >
-          <Ionicons name="trash-outline" size={28} color={PRIMARY} />
+          <Ionicons name="trash-outline" size={28} color="#FFFFFF" />
           <Text style={swipeStyles.panelLabel}>{deleteLabel}</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -216,7 +215,7 @@ const WorkListCard = ({ work, onPress, pressLocked = false, isOpen = false, onRe
     <TouchableOpacity
       style={styles.card}
       onPress={handlePress}
-      activeOpacity={0.72}
+      activeOpacity={1}
       accessibilityRole="button"
       accessibilityLabel={t('works:openWorkAccessibility', {
         name: work.work_name || t('common:untitledWork'),
@@ -475,7 +474,7 @@ const swipeStyles = StyleSheet.create({
   },
   panelRight: {
     right: 0,
-    backgroundColor: "#F0FFFF",
+    backgroundColor: PRIMARY,
     // No radius here on purpose: the panel is a flat rectangle sitting
     // behind the card. The card's own rounded corner + border is the only
     // curve in the composition, so it merges seamlessly with the panel
@@ -489,7 +488,7 @@ const swipeStyles = StyleSheet.create({
     gap: theme.Spacing?.xs ?? 6,
   },
   panelLabel: {
-    color: PRIMARY,
+    color: "#FFFFFF",
     fontSize: theme.FontSize?.sm ?? 14,
     fontFamily: theme.FontFamily?.medium,
     fontWeight: theme.FontWeight?.medium ?? '500',
