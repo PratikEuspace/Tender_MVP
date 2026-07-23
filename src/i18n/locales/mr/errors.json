@@ -13,14 +13,21 @@
     "failedSavePhoto": "या उपकरणावर फोटो जतन करता आला नाही.",
     "failedSavePdf": "या उपकरणावर PDF जतन करता आला नाही.",
     "unsupportedTitle": "असमर्थित फाइल",
-    "unsupportedDocuments": "फक्त PDF, JPG, JPEG आणि PNG फाइल्स परवानगी आहेत.",
-    "unsupportedPhotos": "फक्त JPG आणि PNG फोटो परवानगी आहेत.",
+    "unsupportedDocuments": "फक्त PDF, JPG, JPEG, PNG, HEIC आणि HEIF फाइल्स परवानगी आहेत.",
+    "unsupportedPhotos": "फक्त JPG, PNG, HEIC आणि HEIF फोटो परवानगी आहेत.",
     "unsupportedPdf": "फक्त PDF फाइल्स परवानगी आहेत.",
+    "galleryPermissionDenied": "प्रतिमा अपलोड करण्यासाठी फोटो लायब्ररी प्रवेश आवश्यक आहे. कृपया सेटिंग्जमध्ये सक्षम करा.",
     "limitReachedTitle": "मर्यादा गाठली",
     "limitReachedPhotos": "तुम्ही कमाल {{max}} फोटो अपलोड करू शकता.",
     "rebuildTitle": "पुन्हा बिल्ड आवश्यक",
     "rebuildDocument": "दस्तऐवज अपलोडसाठी नेटिव्ह बिल्ड आवश्यक आहे. ॲप थांबवा, नंतर चालवा:\n\nnpx expo run:android",
     "rebuildGeneric": "ॲप थांबवा, नंतर चालवा:\n\nnpx expo run:android"
+  },
+  "uploadSource": {
+    "title": "येथून अपलोड करा",
+    "photoLibrary": "फोटो लायब्ररी",
+    "files": "फाइल्स / कागदपत्रे",
+    "cancel": "रद्द करा"
   },
   "uploadDocument": {
     "fileUploaded": "फाइल अपलोड केली",

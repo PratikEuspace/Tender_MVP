@@ -13,14 +13,21 @@
     "failedSavePhoto": "Could not save the photo on this device.",
     "failedSavePdf": "Could not save the PDF on this device.",
     "unsupportedTitle": "Unsupported file",
-    "unsupportedDocuments": "Only PDF, JPG, JPEG, and PNG files are allowed.",
-    "unsupportedPhotos": "Only JPG and PNG photos are allowed.",
+    "unsupportedDocuments": "Only PDF, JPG, JPEG, PNG, HEIC, and HEIF files are allowed.",
+    "unsupportedPhotos": "Only JPG, PNG, HEIC, and HEIF photos are allowed.",
     "unsupportedPdf": "Only PDF files are allowed.",
+    "galleryPermissionDenied": "Photo library access is required to upload images. Please enable it in Settings.",
     "limitReachedTitle": "Limit reached",
     "limitReachedPhotos": "You can upload up to {{max}} photos.",
     "rebuildTitle": "Rebuild required",
     "rebuildDocument": "Document upload needs a native build. Stop the app, then run:\n\nnpx expo run:android",
     "rebuildGeneric": "Stop the app, then run:\n\nnpx expo run:android"
+  },
+  "uploadSource": {
+    "title": "Upload from",
+    "photoLibrary": "Photo Library",
+    "files": "Files / Documents",
+    "cancel": "Cancel"
   },
   "uploadDocument": {
     "fileUploaded": "File Uploaded",

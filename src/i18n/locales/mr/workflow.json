@@ -300,8 +300,8 @@
         "off": "बिल सबमिट केले?"
       },
       "uploads": {
-        "billTitle": "बिल PDF",
-        "billUpload": "बिल PDF अपलोड करा"
+        "billTitle": "बिल कागदपत्र",
+        "billUpload": "बिल कागदपत्र अपलोड करा"
       }
     }
   }

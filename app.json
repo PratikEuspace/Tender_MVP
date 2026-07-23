@@ -10,7 +10,10 @@
     "ios": {
       "icon": "./assets/images/ios-icon.png",
       "bundleIdentifier": "com.euspace.wardvikas",
-      "buildNumber": "5"
+      "buildNumber": "5",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow Ward Vikas to access your photos to upload documents."
+      }
     },
     "android": {
       "versionCode": 4,
@@ -43,6 +46,12 @@
       "expo-sqlite",
       "expo-document-picker",
       "expo-file-system",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Ward Vikas to access your photos to upload documents."
+        }
+      ],
       "@react-native-community/datetimepicker",
       "expo-font",
       "expo-image",

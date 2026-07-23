@@ -1,10 +1,13 @@
 /**
- * Local document upload — expo-document-picker + expo-file-system (SDK 55).
+ * Local document upload — expo-document-picker + expo-image-picker + expo-file-system.
  * Static imports required: dynamic import() breaks Metro native module resolution.
+ *
+ * Upload tap → Action Sheet (Photo Library | Files) → same validate/copy/SQLite pipeline.
  */
 
 import { getDocumentAsync } from 'expo-document-picker';
 import { Directory, File, Paths } from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
 
 import {
   DOCUMENT_DEFAULT_BASENAMES,
@@ -23,16 +26,23 @@ import {
   patchTenderNoticePath,
   patchWorkOrderDocumentPath,
 } from '../db/repositories/documentPathRepository';
+import { patchBillDocumentPath } from '../db/repositories/billSubmissionRepository';
 import { getFileNameFromPath } from '../utils/fileName';
 import { showUploadAlert, tError } from '../i18n/alertMessages';
+import {
+  UPLOAD_SOURCE,
+  chooseUploadSource,
+} from '../utils/uploadSourceSheet';
 
-const ALLOWED_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png']);
+const ALLOWED_EXTENSIONS = new Set(['pdf', 'jpg', 'jpeg', 'png', 'heic', 'heif']);
 
 const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'image/jpeg',
   'image/jpg',
   'image/png',
+  'image/heic',
+  'image/heif',
 ];
 
 const PICKER_TYPES = ['application/pdf', 'image/*'];
@@ -46,6 +56,7 @@ const PATH_PATCHERS = {
   [DOCUMENT_TYPES.SANCTION_LETTER]: patchSanctionLetterPath,
   [DOCUMENT_TYPES.WORK_ORDER_DOCUMENT]: patchWorkOrderDocumentPath,
   [DOCUMENT_TYPES.PAYMENT_RECEIPT]: patchPaymentReceiptPath,
+  [DOCUMENT_TYPES.BILL_DOCUMENT]: patchBillDocumentPath,
   [DOCUMENT_TYPES.COMPLETION_CERTIFICATE]: patchCompletionCertificatePath,
   [DOCUMENT_TYPES.SITE_PHOTOS]: patchSitePhotosPath,
 };
@@ -58,6 +69,8 @@ const getExtension = (fileName, mimeType) => {
   if (mime === 'application/pdf') return 'pdf';
   if (mime === 'image/jpeg' || mime === 'image/jpg') return 'jpg';
   if (mime === 'image/png') return 'png';
+  if (mime === 'image/heic' || mime.includes('heic')) return 'heic';
+  if (mime === 'image/heif' || mime.includes('heif')) return 'heif';
 
   return '';
 };
@@ -82,6 +95,7 @@ const isNativeModuleMissing = (error) => {
   const msg = String(error?.message ?? error ?? '');
   return (
     msg.includes('ExpoDocumentPicker') ||
+    msg.includes('ExpoImagePicker') ||
     msg.includes('ExpoFileSystem') ||
     msg.includes('Cannot find native module') ||
     msg.includes('Requiring unknown module')
@@ -128,7 +142,13 @@ const validatePickedAsset = (asset) => {
 
   const mime = (asset.mimeType || '').toLowerCase();
   if (mime && !ALLOWED_MIME_TYPES.includes(mime) && mime !== 'image/jpg') {
-    if (!mime.includes('pdf') && !mime.includes('jpeg') && !mime.includes('png')) {
+    if (
+      !mime.includes('pdf') &&
+      !mime.includes('jpeg') &&
+      !mime.includes('png') &&
+      !mime.includes('heic') &&
+      !mime.includes('heif')
+    ) {
       return {
         ok: false,
         message: tError('upload.unsupportedDocuments'),
@@ -139,23 +159,33 @@ const validatePickedAsset = (asset) => {
   return { ok: true, ext };
 };
 
-/**
- * Pick a document, copy to app_documents/work_{workId}/, persist to SQLite.
- * @returns {Promise<{ filePath: string, fileName: string } | null>}
- */
-export const pickAndStoreDocument = async (workId, documentType) => {
-  if (!workId) {
-    showUploadAlert('upload.failedTitle', 'upload.failedNoWorkId');
-    return null;
+/** Map ImagePicker asset → DocumentPicker-like asset shape. */
+const mapGalleryAssetToDocumentAsset = (asset) => {
+  const mimeType = (asset.mimeType || 'image/jpeg').toLowerCase();
+  let ext = getExtension(asset.fileName, mimeType);
+  if (!ext) {
+    if (mimeType.includes('png')) ext = 'png';
+    else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+    else if (mimeType.includes('heic')) ext = 'heic';
+    else if (mimeType.includes('heif')) ext = 'heif';
+    else {
+      const fromUri = (asset.uri || '').split('.').pop()?.toLowerCase() ?? '';
+      ext = ALLOWED_EXTENSIONS.has(fromUri) ? fromUri : 'jpg';
+    }
   }
 
-  const patchPath = PATH_PATCHERS[documentType];
-  if (!patchPath) {
-    throw new Error(`pickAndStoreDocument: unknown documentType "${documentType}"`);
-  }
+  const name =
+    asset.fileName ||
+    `gallery_photo_${Date.now()}.${ext === 'jpeg' ? 'jpg' : ext}`;
 
-  const defaultBasename = DOCUMENT_DEFAULT_BASENAMES[documentType] ?? 'document';
+  return {
+    uri: asset.uri,
+    name,
+    mimeType: mimeType.startsWith('image/') ? mimeType : `image/${ext}`,
+  };
+};
 
+const pickFromDocumentPicker = async () => {
   let result;
   try {
     result = await getDocumentAsync({
@@ -177,7 +207,75 @@ export const pickAndStoreDocument = async (workId, documentType) => {
     return null;
   }
 
-  const asset = result.assets[0];
+  return result.assets[0];
+};
+
+const pickFromPhotoLibrary = async () => {
+  try {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      showUploadAlert('upload.failedTitle', 'upload.galleryPermissionDenied');
+      return null;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 1,
+      allowsMultipleSelection: false,
+    });
+
+    if (result.canceled || !result.assets?.length) {
+      return null;
+    }
+
+    return mapGalleryAssetToDocumentAsset(result.assets[0]);
+  } catch (e) {
+    console.warn('[documentUploadService] gallery picker error:', e);
+    if (isNativeModuleMissing(e)) {
+      showUploadAlert('upload.rebuildTitle', 'upload.rebuildDocument');
+    } else {
+      showUploadAlert('upload.failedTitle', 'upload.failedPhotoPicker');
+    }
+    return null;
+  }
+};
+
+/**
+ * Action sheet → Photo Library or Files → DocumentPicker-shaped asset.
+ * @returns {Promise<object|null>}
+ */
+const pickDocumentAsset = async () => {
+  const source = await chooseUploadSource();
+  if (!source) return null;
+
+  if (source === UPLOAD_SOURCE.PHOTO_LIBRARY) {
+    return pickFromPhotoLibrary();
+  }
+
+  return pickFromDocumentPicker();
+};
+
+/**
+ * Pick a document, copy to app_documents/work_{workId}/, persist to SQLite.
+ * @returns {Promise<{ filePath: string, fileName: string } | null>}
+ */
+export const pickAndStoreDocument = async (workId, documentType) => {
+  if (!workId) {
+    showUploadAlert('upload.failedTitle', 'upload.failedNoWorkId');
+    return null;
+  }
+
+  const patchPath = PATH_PATCHERS[documentType];
+  if (!patchPath) {
+    throw new Error(`pickAndStoreDocument: unknown documentType "${documentType}"`);
+  }
+
+  const defaultBasename = DOCUMENT_DEFAULT_BASENAMES[documentType] ?? 'document';
+
+  const asset = await pickDocumentAsset();
+  if (!asset) return null;
+
   const validation = validatePickedAsset(asset);
   if (!validation.ok) {
     showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');
@@ -215,28 +313,9 @@ export const pickAndStoreDocument = async (workId, documentType) => {
  * @returns {Promise<{ filePath: string, fileName: string } | null>}
  */
 export const pickAndStoreCorrespondenceDocument = async () => {
-  let result;
-  try {
-    result = await getDocumentAsync({
-      type: PICKER_TYPES,
-      copyToCacheDirectory: true,
-      multiple: false,
-    });
-  } catch (e) {
-    console.warn('[documentUploadService] correspondence picker error:', e);
-    if (isNativeModuleMissing(e)) {
-      showUploadAlert('upload.rebuildTitle', 'upload.rebuildDocument');
-    } else {
-      showUploadAlert('upload.failedTitle', 'upload.failedPicker');
-    }
-    return null;
-  }
+  const asset = await pickDocumentAsset();
+  if (!asset) return null;
 
-  if (result.canceled || !result.assets?.length) {
-    return null;
-  }
-
-  const asset = result.assets[0];
   const validation = validatePickedAsset(asset);
   if (!validation.ok) {
     showUploadAlert('upload.unsupportedTitle', 'upload.unsupportedDocuments');

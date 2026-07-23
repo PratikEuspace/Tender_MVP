@@ -300,8 +300,8 @@
         "off": "Bill submitted?"
       },
       "uploads": {
-        "billTitle": "Bill PDF",
-        "billUpload": "Upload Bill PDF"
+        "billTitle": "Bill document",
+        "billUpload": "Upload bill document"
       }
     }
   }

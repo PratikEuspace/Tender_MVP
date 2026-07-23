@@ -10,7 +10,7 @@ import {
 } from '../../services/billPdfUploadService';
 
 /**
- * Bill PDF upload section — PDF only, replace support.
+ * Bill document upload section — shared document flow (Photo Library | Files), replace support.
  */
 const BillDocumentUpload = ({ workId, filePath = '', onChange }) => {
   const { t } = useTranslation('workflow');

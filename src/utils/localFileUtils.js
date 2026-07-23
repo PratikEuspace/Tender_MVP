@@ -2,7 +2,7 @@ import { File } from 'expo-file-system';
 
 import { getFileNameFromPath } from './fileName';
 
-const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png']);
+const IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'heic', 'heif']);
 
 export const getFileExtension = (filePath) => {
   const name = getFileNameFromPath(filePath);
@@ -29,5 +29,7 @@ export const getMimeTypeForPath = (filePath) => {
   if (ext === 'pdf') return 'application/pdf';
   if (ext === 'png') return 'image/png';
   if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+  if (ext === 'heic') return 'image/heic';
+  if (ext === 'heif') return 'image/heif';
   return 'application/octet-stream';
 };

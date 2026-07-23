@@ -3,6 +3,7 @@ import { pickAndStoreDocument } from '../services/documentUploadService';
 
 /**
  * Reusable document pick + local store + SQLite persist.
+ * Opens Action Sheet (Photo Library | Files) via documentUploadService.
  * @param {number|string} workId
  * @param {string} documentType — DOCUMENT_TYPES.*
  * @param {(filePath: string, fileName: string) => void} onStored
