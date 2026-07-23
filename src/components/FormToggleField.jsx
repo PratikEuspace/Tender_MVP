@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import FormFieldLabel from './help/FormFieldLabel';
 import LargeToggleSwitch from './LargeToggleSwitch';
@@ -64,17 +64,11 @@ const FormToggleField = ({
         />
       ) : null}
 
-      <Pressable
-        onPress={handleToggle}
-        disabled={disabled}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value, disabled }}
-        accessibilityLabel={statusText}
-        style={({ pressed }) => [
+      <View
+        style={[
           formFieldStyles.controlShell,
           formFieldStyles.toggleControl,
           disabled && formFieldStyles.controlDisabled,
-          pressed && !disabled && { opacity: 0.92 },
           rowStyle,
         ]}
       >
@@ -101,7 +95,7 @@ const FormToggleField = ({
             rightLabel={rightSegment}
           />
         </View>
-      </Pressable>
+      </View>
     </View>
   );
 };

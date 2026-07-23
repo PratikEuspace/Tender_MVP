@@ -39,9 +39,6 @@ const displayMoney = (value, i18n) => {
 
 const displayDate = (value, i18n) => displayText(formatDateForStorage(value) || value, i18n);
 
-const displayBool = (value, i18n, onKey, offKey) =>
-  tw(i18n, value ? onKey : offKey);
-
 const displayBoolPdf = (value, i18n, onKey, offKey) =>
   tr(i18n, coercePdfBool(value) ? onKey : offKey);
 
@@ -213,11 +210,11 @@ const buildPmcSection = (approval, i18n) => {
     [tw(i18n, 'steps.pmcApproval.fields.letterDate.label'), displayDate(approval.letter_date, i18n)],
     [
       tw(i18n, 'steps.pmcApproval.fields.financeCommittee.label'),
-      displayBool(
+      displayBoolPdf(
         approval.finance_required,
         i18n,
-        'steps.pmcApproval.toggles.financeOn',
-        'steps.pmcApproval.toggles.financeOff',
+        'export.pdfLabels.yes',
+        'export.pdfLabels.no',
       ),
     ],
     [
@@ -311,11 +308,11 @@ const buildWorkProgressSection = (workProgress, i18n) => {
   return sectionHtml(tw(i18n, 'steps.workProgress.title'), [
     [
       tw(i18n, 'steps.workProgress.toggles.label'),
-      displayBool(
+      displayBoolPdf(
         workProgress.work_completion,
         i18n,
-        'steps.workProgress.toggles.on',
-        'steps.workProgress.toggles.off',
+        'export.pdfLabels.yes',
+        'export.pdfLabels.no',
       ),
     ],
     [tw(i18n, 'site.notes'), displayText(workProgress.site_notes, i18n)],
@@ -362,11 +359,11 @@ const buildBillSection = (billSubmission, i18n) => {
   return sectionHtml(tw(i18n, 'steps.billSubmission.title'), [
     [
       tw(i18n, 'steps.billSubmission.toggles.label'),
-      displayBool(
+      displayBoolPdf(
         billSubmission.bill_submitted,
         i18n,
-        'steps.billSubmission.toggles.on',
-        'steps.billSubmission.toggles.off',
+        'export.pdfLabels.yes',
+        'export.pdfLabels.no',
       ),
     ],
     [tw(i18n, 'steps.billSubmission.fields.billNumber.label'), displayText(billSubmission.bill_number, i18n)],
@@ -562,7 +559,8 @@ const REPORT_STYLES = `
     page-break-after: avoid;
   }
   h3 {
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 700;
     margin: 14px 0 8px;
     color: #1F2937;
     border-bottom: 1px solid #E5E7EB;
@@ -794,9 +792,6 @@ export const buildDetailedReportHtml = (report, i18n, imageCache) => {
   <body>
     ${buildSummaryHtml(report, i18n)}
     ${buildIndexTableHtml(report.indexRows, i18n)}
-    <section class="detail-intro">
-      <h2>${escapeHtml(tr(i18n, 'export.detailAppendixTitle'))}</h2>
-    </section>
     ${detailSections}
     ${buildCorrespondenceSection(report.generalCorrespondence, i18n)}
   </body>

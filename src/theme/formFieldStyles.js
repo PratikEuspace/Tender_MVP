@@ -18,10 +18,10 @@ export const FORM_FIELD_LABEL_MARGIN_BOTTOM = 7;
 export const FORM_FIELD_FONT_SIZE = 15;
 /** Comfortable line height for Latin + Devanagari in form controls */
 export const FORM_FIELD_TEXT_LINE_HEIGHT = 22;
-export const FORM_FIELD_LABEL_FONT_SIZE = 14;
+export const FORM_FIELD_LABEL_FONT_SIZE = 15;
 export const FORM_FIELD_LABEL_FONT_WEIGHT = '500';
 /** Prevents Devanagari ascenders from clipping on iOS/Android */
-export const FORM_FIELD_LABEL_LINE_HEIGHT = 20;
+export const FORM_FIELD_LABEL_LINE_HEIGHT = 22;
 export const SECTION_LABEL_FONT_SIZE = 15;
 export const SECTION_LABEL_LINE_HEIGHT = FORM_FIELD_TEXT_LINE_HEIGHT;
 export const FORM_FIELD_BG = '#FFFFFF';
