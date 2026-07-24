@@ -28,8 +28,7 @@ import { getWorkProgressByWorkId, parseSitePhotosJson } from './workProgressRepo
 
 const workCompletedToChipStatus = (workCompleted) => {
   if (workCompleted === 'Completed') return 'completed';
-  if (workCompleted === 'In Progress') return 'progress';
-  return 'pending';
+  return 'progress';
 };
 
 const pushDocumentRef = (refs, type, path) => {
@@ -117,7 +116,7 @@ const toBudgetRow = (payload) => ({
 export const buildWorkIndexRow = (payload, index, listRow, i18n) => {
   const { work, paymentSummary, sanction } = payload;
   const effectiveBudget = getEffectiveBudgetForRow(toBudgetRow(payload));
-  const statusKey = workCompletedToChipStatus(listRow?.work_completed ?? 'Pending');
+  const statusKey = workCompletedToChipStatus(listRow?.work_completed ?? 'In Progress');
 
   return {
     index: index + 1,
@@ -135,7 +134,7 @@ export const buildWorkIndexRow = (payload, index, listRow, i18n) => {
       allCompleteKey: 'export.allStepsComplete',
     }),
     statusKey,
-    workCompleted: listRow?.work_completed ?? 'Pending',
+    workCompleted: listRow?.work_completed ?? 'In Progress',
   };
 };
 
@@ -210,13 +209,11 @@ export const getFinancialYearDetailedReport = (financialYear, works, i18n) => {
 
   let completed = 0;
   let inProgress = 0;
-  let pending = 0;
 
   fyWorks.forEach((work) => {
     const status = workCompletedToChipStatus(work.work_completed);
     if (status === 'completed') completed += 1;
-    else if (status === 'progress') inProgress += 1;
-    else pending += 1;
+    else inProgress += 1;
   });
 
   const budgetSummary = getReportsBudgetSummary(financialYear, { useTotalAmountPaid: true });
@@ -231,7 +228,6 @@ export const getFinancialYearDetailedReport = (financialYear, works, i18n) => {
     summary: {
       completed,
       inProgress,
-      pending,
       budgetSummary,
     },
     indexRows,

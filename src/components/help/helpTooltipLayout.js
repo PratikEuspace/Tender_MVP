@@ -24,6 +24,41 @@ const resolveOpenBelow = (spaceBelow, spaceAbove, contentHeight) => {
 };
 
 /**
+ * Vertical placement:
+ * - Below: pin panel top just under the icon.
+ * - Above: pin panel *bottom* just above the icon (avoids a large gap from
+ *   subtracting the fixed max content height when the real body is shorter).
+ */
+const buildVerticalPlacement = ({
+  openBelow,
+  belowTop,
+  anchorY,
+  gap,
+  edge,
+  containerHeight,
+  contentHeight,
+}) => {
+  if (openBelow) {
+    return {
+      openBelow: true,
+      top: belowTop,
+      bottom: undefined,
+    };
+  }
+
+  // Distance from container bottom → keeps shrink-wrapped panel flush above icon.
+  const bottom = Math.max(edge, containerHeight - (anchorY - gap));
+  // Max-height box top (hit-testing / clamping reference only).
+  const top = Math.max(edge, anchorY - gap - contentHeight);
+
+  return {
+    openBelow: false,
+    top,
+    bottom,
+  };
+};
+
+/**
  * Compute help-tooltip position anchored to the icon rect in window coordinates.
  */
 export const computeHelpTooltipLayout = (anchor, contentHeight, options = {}) => {
@@ -46,17 +81,21 @@ export const computeHelpTooltipLayout = (anchor, contentHeight, options = {}) =>
   const spaceBelow = screenHeight - belowTop - EDGE;
   const spaceAbove = anchor.y - EDGE;
   const openBelow = resolveOpenBelow(spaceBelow, spaceAbove, contentHeight);
-
-  const top = openBelow
-    ? belowTop
-    : Math.max(EDGE, anchor.y - gap - contentHeight);
+  const vertical = buildVerticalPlacement({
+    openBelow,
+    belowTop,
+    anchorY: anchor.y,
+    gap,
+    edge: EDGE,
+    containerHeight: screenHeight,
+    contentHeight,
+  });
 
   return {
-    top,
+    ...vertical,
     left,
     width: menuWidth,
     maxHeight: contentHeight,
-    openBelow,
   };
 };
 
@@ -94,17 +133,21 @@ export const computeScopedHelpTooltipLayout = (
   const spaceBelow = scopeHeight - belowTop - edge;
   const spaceAbove = anchor.y - edge;
   const openBelow = resolveOpenBelow(spaceBelow, spaceAbove, contentHeight);
-
-  const top = openBelow
-    ? belowTop
-    : Math.max(edge, anchor.y - gap - contentHeight);
+  const vertical = buildVerticalPlacement({
+    openBelow,
+    belowTop,
+    anchorY: anchor.y,
+    gap,
+    edge,
+    containerHeight: scopeHeight,
+    contentHeight,
+  });
 
   return {
-    top,
+    ...vertical,
     left,
     width: menuWidth,
     maxHeight: contentHeight,
-    openBelow,
   };
 };
 

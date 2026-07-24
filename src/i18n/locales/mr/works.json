@@ -11,5 +11,11 @@
   "deleteErrorTitle": "हटवणे अयशस्वी",
   "deleteErrorMessage": "हे काम हटवता आले नाही. कृपया पुन्हा प्रयत्न करा.",
   "deleteBusyTitle": "कृपया प्रतीक्षा करा",
-  "deleteBusyMessage": "सेव्ह प्रगतीत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा."
+  "deleteBusyMessage": "सेव्ह प्रगतीत आहे. थोड्या वेळाने पुन्हा प्रयत्न करा.",
+  "card": {
+    "na": "N/A",
+    "code": "कोड: {{code}}",
+    "wardDepartment": "प्रभाग: {{ward}} | विभाग: {{department}}",
+    "budgetMissing": "अंदाजपत्रक: N/A"
+  }
 }

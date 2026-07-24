@@ -12,6 +12,7 @@ import NavigationCard from '../../components/Navigationcard';
 import BackupProgressModal from '../../components/settings/BackupProgressModal';
 import FinancialYearBudgetSection from '../../components/settings/FinancialYearBudgetSection';
 import SettingsDrawer from '../../components/Settingsdrawer';
+import { reportSectionLabelStyle } from '../../components/reports/reportTypography';
 import { useAppDialog } from '../../context/AppDialogProvider';
 import {
     createBackupArchive,
@@ -391,11 +392,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   sectionTitle: {
-    fontSize: FontSize.base,
-    fontWeight: 500,
-    color: 'black',
+    ...reportSectionLabelStyle,
     marginBottom: Spacing.sm,
-    letterSpacing: 0.2,
   },
   sectionCards: {},
   languageHint: {

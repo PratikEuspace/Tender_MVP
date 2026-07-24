@@ -198,7 +198,7 @@ const CREATE_COMPLETION_CLOSURE = `
   CREATE TABLE IF NOT EXISTS completion_closure (
     id                           INTEGER PRIMARY KEY AUTOINCREMENT,
     work_id                      INTEGER NOT NULL,
-    work_completed               TEXT DEFAULT 'Pending',
+    work_completed               TEXT DEFAULT 'In Progress',
     completion_certificate_path  TEXT,
     site_photos_path             TEXT,
     created_at                   TEXT DEFAULT (datetime('now')),
@@ -291,6 +291,20 @@ const runColumnMigrations = (db) => {
   addColumnIfMissing('works', 'officer_mobile', 'TEXT');
   // v12 — General Correspondence document path
   addColumnIfMissing('general_correspondence', 'document_path', 'TEXT');
+
+  // v13 — Work status: Pending removed; default / legacy rows → In Progress
+  try {
+    db.runSync(
+      `UPDATE completion_closure
+       SET work_completed = 'In Progress',
+           updated_at = datetime('now')
+       WHERE work_completed IS NULL
+          OR TRIM(work_completed) = ''
+          OR work_completed = 'Pending';`,
+    );
+  } catch (_) {
+    // Table may not exist yet on first create — CREATE runs in MIGRATIONS first.
+  }
 
   // v6 — UNIQUE indexes (IF NOT EXISTS keeps these silent on every launch).
   const indexStatements = [

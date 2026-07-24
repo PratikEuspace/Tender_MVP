@@ -68,13 +68,13 @@ export const getAllWorks = () => {
 };
 
 // ─── Works list: includes completion status (NOT workflow_step) ───────────────
-// work_completed from completion_closure.work_completed; default Pending if no row.
+// work_completed from completion_closure.work_completed; default In Progress if no row.
 export const getAllWorksForList = () => {
   const db = getDB();
   return db.getAllSync(
     `SELECT
        w.*,
-       COALESCE(cc.work_completed, 'Pending') AS work_completed
+       COALESCE(cc.work_completed, 'In Progress') AS work_completed
      FROM works w
      LEFT JOIN completion_closure cc ON cc.work_id = w.id
      ORDER BY w.created_at DESC;`,

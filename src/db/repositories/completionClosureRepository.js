@@ -26,7 +26,7 @@ export const upsertCompletionClosure = (workId, data) => {
   );
 
   const {
-    work_completed               = 'Pending',
+    work_completed               = 'In Progress',
     completion_certificate_path  = null,
     site_photos_path             = null,
   } = data;

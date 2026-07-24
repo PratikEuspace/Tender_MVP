@@ -1,46 +1,34 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useStatusLabel } from '../../i18n/statusLabels';
-import { dashboardCardBorderStyle } from './dashboardCardBorder';
 
-const STATUS_COLORS = {
-  completed: '#2F5E34',
-  pending: '#8B2513',
-  progress: '#FF5D00',
-};
+import StatusChip from '../Statuschip';
+import { dashboardCardBorderStyle } from './dashboardCardBorder';
 
 const RecentWorkCard = ({
   title,
   code = 'Code',
-  status = 'pending',
+  status = 'progress',
   iconName = 'construct-outline',
   style,
-}) => {
-  const statusColor = STATUS_COLORS[status] ?? STATUS_COLORS.pending;
-  const statusLabel = useStatusLabel(status);
+}) => (
+  <View style={[styles.card, style]}>
+    <View style={styles.iconCircle}>
+      <Ionicons name={iconName} size={20} color="#374151" />
+    </View>
 
-  return (
-    <View style={[styles.card, style]}>
-      <View style={styles.iconCircle}>
-        <Ionicons name={iconName} size={20} color="#374151" />
-      </View>
-
-      <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-        <Text style={styles.code} numberOfLines={1}>
-          {code}
-        </Text>
-      </View>
-
-      <Text style={[styles.status, { color: statusColor }]}>
-        {statusLabel}
+    <View style={styles.body}>
+      <Text style={styles.title} numberOfLines={1}>
+        {title}
+      </Text>
+      <Text style={styles.code} numberOfLines={1}>
+        {code}
       </Text>
     </View>
-  );
-};
+
+    <StatusChip status={status} style={styles.statusChip} />
+  </View>
+);
 
 const styles = StyleSheet.create({
   card: {
@@ -65,6 +53,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     marginRight: 8,
+    minWidth: 0,
   },
   title: {
     fontSize: 15,
@@ -76,9 +65,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9CA3AF',
   },
-  status: {
-    fontSize: 13,
-    fontWeight: '600',
+  statusChip: {
+    flexShrink: 0,
   },
 });
 

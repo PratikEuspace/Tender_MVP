@@ -178,7 +178,6 @@ export const FINANCE_APPROVAL_STATUS_OPTIONS = [
 ];
 
 export const WORK_COMPLETED_OPTIONS = [
-  { label: 'Pending',     value: 'Pending'     },
   { label: 'In Progress', value: 'In Progress' },
   { label: 'Completed',   value: 'Completed'   },
 ];

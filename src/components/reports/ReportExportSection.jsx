@@ -4,6 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
+import { reportSectionLabelStyle } from './reportTypography';
 
 const ReportExportSection = ({
   style,
@@ -50,9 +51,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+    ...reportSectionLabelStyle,
     marginBottom: 10,
   },
   card: {

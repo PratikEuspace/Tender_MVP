@@ -75,7 +75,7 @@ const ensureCompletionRow = (workId) => {
   if (getCompletionClosureByWorkId(workId)) return;
   const db = getDB();
   db.runSync(
-    `INSERT INTO completion_closure (work_id, work_completed) VALUES (?, 'Pending');`,
+    `INSERT INTO completion_closure (work_id, work_completed) VALUES (?, 'In Progress');`,
     [workId],
   );
 };

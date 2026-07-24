@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { dashboardCardSurfaceStyle } from '../dashboard/dashboardCardBorder';
+import { reportSectionLabelStyle } from './reportTypography';
 
 const PRIMARY = '#062E52';
 const GRADIENT_END = '#0D67B8';
@@ -106,10 +107,7 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    lineHeight: 20,
+    ...reportSectionLabelStyle,
     marginBottom: 3,
   },
   subtitle: {

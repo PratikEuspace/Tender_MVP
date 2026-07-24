@@ -446,10 +446,6 @@ const buildSummaryHtml = (report, i18n) => {
           <div class="kpi-value">${escapeHtml(String(summary.inProgress))}</div>
           <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.inProgress'))}</div>
         </div>
-        <div class="kpi-card kpi-pending">
-          <div class="kpi-value">${escapeHtml(String(summary.pending))}</div>
-          <div class="kpi-label">${escapeHtml(tr(i18n, 'stats.pending'))}</div>
-        </div>
       </div>
 
       <div class="budget-summary">

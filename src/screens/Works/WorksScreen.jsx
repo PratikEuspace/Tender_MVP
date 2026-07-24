@@ -40,9 +40,9 @@ const THRESHOLD = PANEL_WIDTH * 0.5;
 const PRIMARY = theme.Colors?.primary ?? '#062E52';
 const PRESS_LOCK_RELEASE_MS = 60;
 
-const formatBudget = (budget) => {
+const formatBudgetAmount = (budget) => {
   const n = Number(budget) || 0;
-  if (n === 0) return '—';
+  if (n === 0) return null;
   return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 };
 
@@ -200,7 +200,11 @@ function SwipeableDeleteRow({
 
 const WorkListCard = ({ work, onPress, pressLocked = false, isOpen = false, onRequestClose, t }) => {
   const chipStatus = workCompletedToChipStatus(work.work_completed);
-  const meta = [work.ward, work.department].filter(Boolean).join(' | ');
+  const na = t('works:card.na');
+  const workCode = work.work_code?.trim() || na;
+  const ward = work.ward?.trim() || na;
+  const department = work.department?.trim() || na;
+  const budgetAmount = formatBudgetAmount(work.budget);
 
   const handlePress = () => {
     if (pressLocked) return;
@@ -226,17 +230,15 @@ const WorkListCard = ({ work, onPress, pressLocked = false, isOpen = false, onRe
           <Text style={styles.cardTitle} numberOfLines={2}>
             {work.work_name || t('common:untitledWork')}
           </Text>
-          {work.work_code ? (
-            <Text style={styles.cardCode} numberOfLines={1}>
-              {t('common:codePrefix', { code: work.work_code })}
-            </Text>
-          ) : null}
-          {meta ? (
-            <Text style={styles.cardMeta} numberOfLines={1}>
-              {meta}
-            </Text>
-          ) : null}
-          <Text style={styles.cardBudget}>{formatBudget(work.budget)}</Text>
+          <Text style={styles.cardCode} numberOfLines={1}>
+            {t('works:card.code', { code: workCode })}
+          </Text>
+          <Text style={styles.cardMeta} numberOfLines={1}>
+            {t('works:card.wardDepartment', { ward, department })}
+          </Text>
+          <Text style={styles.cardBudget} numberOfLines={1}>
+            {budgetAmount ?? t('works:card.budgetMissing')}
+          </Text>
         </View>
 
         <View style={styles.cardChipColumn}>
@@ -539,6 +541,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#000000',
     lineHeight: 22,
+    // Reserve 2 lines so short names don't shrink the card.
+    minHeight: 20,
     marginBottom: 4,
   },
   cardCode: {

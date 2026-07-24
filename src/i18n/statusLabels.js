@@ -5,7 +5,6 @@ import i18n from './index';
 
 const FALLBACK = {
   all: 'All',
-  pending: 'Pending',
   progress: 'Progress',
   completed: 'Completed',
 };
@@ -13,7 +12,7 @@ const FALLBACK = {
 const statusTranslationKey = (statusKey) => `status.${statusKey}`;
 
 const fallbackLabel = (statusKey) =>
-  FALLBACK[statusKey] ?? FALLBACK.pending;
+  FALLBACK[statusKey] ?? FALLBACK.progress;
 
 /** Non-React callers only — prefer useStatusLabel in components. */
 export const getStatusLabel = (statusKey) =>

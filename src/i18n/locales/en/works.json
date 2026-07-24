@@ -11,5 +11,11 @@
   "deleteErrorTitle": "Delete Failed",
   "deleteErrorMessage": "Could not delete this work. Please try again.",
   "deleteBusyTitle": "Please Wait",
-  "deleteBusyMessage": "A save is in progress. Try again in a moment."
+  "deleteBusyMessage": "A save is in progress. Try again in a moment.",
+  "card": {
+    "na": "N/A",
+    "code": "Code: {{code}}",
+    "wardDepartment": "Ward: {{ward}} | Department: {{department}}",
+    "budgetMissing": "Budget: N/A"
+  }
 }

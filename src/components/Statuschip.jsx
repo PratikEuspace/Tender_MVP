@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -7,17 +8,29 @@ import { getStatusLabel, useStatusLabel } from '../i18n/statusLabels';
 // Figma Work List status chips — shared by filters + card badges
 const CHIP_WIDTH = 112;
 const CHIP_HEIGHT = 30;
+const ICON_SIZE = 13;
 
 const STATUS_CONFIG = {
-  all: { color: '#555555' },
-  pending: { color: '#8B2513' },
-  progress: { color: '#FF5D00' },
-  completed: { color: '#2F5E34' },
+  all: {
+    color: '#555555',
+    borderColor: '#C4C4C4',
+    icon: null,
+  },
+  progress: {
+    color: '#FF5D00',
+    borderColor: '#FFB380',
+    icon: 'time-outline',
+  },
+  completed: {
+    color: '#2F5E34',
+    borderColor: '#A8C5AA',
+    icon: 'checkmark-circle-outline',
+  },
 };
 
 const StatusChip = ({
   label,
-  status = 'pending',
+  status = 'progress',
   selected = false,
   onPress,
   style,
@@ -25,13 +38,17 @@ const StatusChip = ({
   compact = false,
 }) => {
   const { t } = useTranslation('common');
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG.progress;
   const translatedLabel = useStatusLabel(status);
   const displayLabel = label ?? translatedLabel;
   const isInteractive = typeof onPress === 'function' && !disabled;
 
   const chipStyle = [
     compact ? styles.chipCompact : styles.chip,
+    {
+      backgroundColor: '#FFFFFF',
+      borderColor: selected ? config.color : config.borderColor,
+    },
     selected && styles.chipSelected,
     disabled && styles.disabled,
     style,
@@ -43,7 +60,21 @@ const StatusChip = ({
     selected && styles.labelSelected,
   ];
 
-  const content = <Text style={labelStyle} numberOfLines={1}>{displayLabel}</Text>;
+  const content = (
+    <View style={styles.contentRow}>
+      {config.icon ? (
+        <Ionicons
+          name={config.icon}
+          size={ICON_SIZE}
+          color={config.color}
+          style={styles.icon}
+        />
+      ) : null}
+      <Text style={labelStyle} numberOfLines={1}>
+        {displayLabel}
+      </Text>
+    </View>
+  );
 
   if (isInteractive) {
     return (
@@ -75,59 +106,57 @@ const styles = StyleSheet.create({
   chip: {
     width: CHIP_WIDTH,
     height: CHIP_HEIGHT,
-    borderRadius: 5,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#999999',
-    backgroundColor: '#F1EFEF',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
+    paddingHorizontal: 6,
   },
   chipCompact: {
     flex: 1,
     minWidth: 0,
     height: CHIP_HEIGHT,
-    borderRadius: 5,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#999999',
-    backgroundColor: '#F1EFEF',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
   },
   chipSelected: {
-    borderColor: '#333333',
-    borderWidth: 1.2,
+    borderWidth: 1.5,
+  },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxWidth: '100%',
+  },
+  icon: {
+    marginRight: 4,
+    flexShrink: 0,
   },
   label: {
     fontFamily: theme.FontFamily?.regular ?? 'Roboto',
-    fontSize: 15,
-    fontWeight: '400',
-    letterSpacing: 1.05,
+    fontSize: 14,
+    fontWeight: '500',
+    letterSpacing: 0.3,
     textAlign: 'center',
     includeFontPadding: false,
     textAlignVertical: 'center',
+    flexShrink: 1,
   },
   labelCompact: {
     fontFamily: theme.FontFamily?.regular ?? 'Roboto',
     fontSize: 13,
-    fontWeight: '400',
-    letterSpacing: 0.4,
+    fontWeight: '500',
+    letterSpacing: 0.2,
     textAlign: 'center',
     includeFontPadding: false,
     textAlignVertical: 'center',
+    flexShrink: 1,
   },
   labelSelected: {
-    fontWeight: '500',
+    fontWeight: '600',
   },
   disabled: {
     opacity: 0.45,
@@ -136,8 +165,8 @@ const styles = StyleSheet.create({
 
 export const workCompletedToChipStatus = (workCompleted) => {
   if (workCompleted === 'Completed') return 'completed';
-  if (workCompleted === 'In Progress') return 'progress';
-  return 'pending';
+  // Pending and any other/legacy value map to Progress.
+  return 'progress';
 };
 
 export const workCompletedToChipLabel = (workCompleted) => {

@@ -40,20 +40,17 @@ const ReportsScreen = () => {
     const fyWorks = filterWorksByFinancialYear(works, fy);
     let completed = 0;
     let inProgress = 0;
-    let pending = 0;
 
     fyWorks.forEach((work) => {
       const status = workCompletedToChipStatus(work.work_completed);
       if (status === 'completed') completed += 1;
-      else if (status === 'progress') inProgress += 1;
-      else pending += 1;
+      else inProgress += 1;
     });
 
     return {
       total: fyWorks.length,
       completed,
       inProgress,
-      pending,
     };
   }, [works, fy]);
 
@@ -162,13 +159,6 @@ const ReportsScreen = () => {
             value={String(workStats.inProgress)}
             title={t('stats.inProgress')}
             subtitle={t('stats.inProgressSubtitle')}
-          />
-          <View style={styles.statsGap} />
-          <ReportStatCard
-            variant="pending"
-            value={String(workStats.pending)}
-            title={t('stats.pending')}
-            subtitle={t('stats.pendingSubtitle')}
           />
         </View>
 

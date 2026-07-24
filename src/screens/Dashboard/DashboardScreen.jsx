@@ -80,7 +80,7 @@ const DashboardScreen = () => {
     fyWorks.forEach((work) => {
       const status = workCompletedToChipStatus(work.work_completed);
       if (status === 'completed') complete += 1;
-      else if (status === 'progress') inProgress += 1;
+      else inProgress += 1;
     });
 
     return {

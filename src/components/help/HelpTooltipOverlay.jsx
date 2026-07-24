@@ -22,13 +22,25 @@ const HelpTooltipOverlay = ({
 }) => {
   if (!visible || !layout) return null;
 
+  // Use either top (below icon) or bottom (above icon) — never both, or the
+  // panel stretches to maxHeight and recreates a large empty gap.
+  const panelPosition = layout.openBelow
+    ? { top: layout.top }
+    : { bottom: layout.bottom };
+
   return (
     <View
       pointerEvents="box-none"
       style={[
         styles.layer,
         scopeLayout
-          ? { width: scopeLayout.width, minHeight: scopeLayout.height }
+          ? {
+              top: 0,
+              left: 0,
+              width: scopeLayout.width,
+              // Definite height so `bottom`-anchored panels resolve correctly.
+              height: scopeLayout.height,
+            }
           : StyleSheet.absoluteFillObject,
       ]}
     >
@@ -36,7 +48,7 @@ const HelpTooltipOverlay = ({
         style={[
           styles.panel,
           {
-            top: layout.top,
+            ...panelPosition,
             left: layout.left,
             width: layout.width,
             maxHeight: layout.maxHeight,
