@@ -21,20 +21,19 @@ const savePdfCopy = (sourceUri, financialYear) => {
     destination.delete();
   }
 
-  source.copy(destination);
+  // `copy` resolves asynchronously — sharing a URI before the copy lands makes
+  // iOS reject the file as unreadable. `copySync` guarantees the PDF is on disk
+  // by the time the URI is handed to the share sheet.
+  source.copySync(destination);
   return destination.uri;
 };
 
 /**
- * Generate detailed FY work report PDF, save locally, and open share sheet when available.
+ * Generate the detailed FY work report PDF and save it locally WITHOUT sharing.
  * Labels follow the current i18n language at export time.
- * @returns {Promise<{ noData: true } | { noData: false, filePath: string, shared: boolean }>}
+ * @returns {Promise<{ noData: true } | { noData: false, filePath: string }>}
  */
-export const exportFinancialYearReportPdf = async ({
-  financialYear,
-  works,
-  labels = {},
-}) => {
+export const createFinancialYearReportPdf = async ({ financialYear, works }) => {
   const report = getFinancialYearDetailedReport(financialYear, works, i18n);
   if (!report.workCount) {
     return { noData: true };
@@ -42,17 +41,30 @@ export const exportFinancialYearReportPdf = async ({
 
   const html = buildDetailedReportHtml(report, i18n);
   const { uri } = await Print.printToFileAsync({ html });
-  const filePath = savePdfCopy(uri, financialYear);
 
-  let shared = false;
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(filePath, {
-      mimeType: 'application/pdf',
-      dialogTitle: labels.shareTitle ?? i18n.t('export.shareTitle', { ns: 'reports' }),
-      UTI: 'com.adobe.pdf',
-    });
-    shared = true;
-  }
+  return { noData: false, filePath: savePdfCopy(uri, financialYear) };
+};
 
-  return { noData: false, filePath, shared };
+/**
+ * Present the iOS/Android share sheet for an already-created report PDF.
+ *
+ * IMPORTANT (iOS): call this only after any React Native <Modal> (e.g. the
+ * export confirmation dialog) has been dismissed. iOS cannot present the system
+ * share sheet on top of an already-presented RN modal.
+ *
+ * @param {string} filePath
+ * @param {{ shareTitle?: string }} [options]
+ * @returns {Promise<boolean>} whether the share sheet was presented
+ */
+export const shareReportPdf = async (filePath, { shareTitle } = {}) => {
+  if (!filePath) return false;
+  if (!(await Sharing.isAvailableAsync())) return false;
+
+  await Sharing.shareAsync(filePath, {
+    mimeType: 'application/pdf',
+    dialogTitle: shareTitle ?? i18n.t('export.shareTitle', { ns: 'reports' }),
+    UTI: 'com.adobe.pdf',
+  });
+
+  return true;
 };

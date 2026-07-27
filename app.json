@@ -10,7 +10,7 @@
     "ios": {
       "icon": "./assets/images/ios-icon.png",
       "bundleIdentifier": "com.euspace.wardvikas",
-      "buildNumber": "5",
+      "buildNumber": "7",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow Ward Vikas to access your photos to upload documents."
       }

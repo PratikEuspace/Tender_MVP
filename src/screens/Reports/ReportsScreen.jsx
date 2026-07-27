@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -19,7 +19,10 @@ import {
   getReportsBudgetSummary,
 } from '../../db/repositories/reportsRepository';
 import { translateBudgetSummary } from '../../i18n/reportLabels';
-import { exportFinancialYearReportPdf } from '../../services/reportsPdfExportService';
+import {
+  createFinancialYearReportPdf,
+  shareReportPdf,
+} from '../../services/reportsPdfExportService';
 import useWorkStore from '../../store/useWorkStore';
 
 const ReportsScreen = () => {
@@ -30,6 +33,7 @@ const ReportsScreen = () => {
   const [fy, setFy] = useState('2025-26');
   const [rawBudgetSummary, setRawBudgetSummary] = useState(() => emptyBudgetSummary());
   const [exportingPdf, setExportingPdf] = useState(false);
+  const exportInFlightRef = useRef(false);
 
   const budgetSummary = useMemo(
     () => translateBudgetSummary(rawBudgetSummary),
@@ -86,44 +90,78 @@ const ReportsScreen = () => {
   );
 
   const handleExportPdf = useCallback(async () => {
-    if (exportingPdf) return;
+    // Ref guard, not `exportingPdf`: state updates are async, so rapid taps can
+    // otherwise start a second export before the first render lands.
+    if (exportInFlightRef.current) return;
+    exportInFlightRef.current = true;
 
-    await showConfirmation({
-      title: t('export.confirmTitle'),
-      message: t('export.confirmMessage'),
-      onConfirm: async () => {
-        setExportingPdf(true);
-        try {
-          const result = await exportFinancialYearReportPdf({
-            financialYear: fy,
-            works,
-            labels: pdfExportLabels,
-          });
+    try {
+      let result = null;
+      let generateFailed = false;
 
-          if (result.noData) {
-            showInfo({
-              title: t('export.noDataTitle'),
-              message: t('export.noDataMessage'),
+      // The PDF is only generated inside the confirmation dialog; sharing waits
+      // until the dialog has closed (see below).
+      const confirmed = await showConfirmation({
+        title: t('export.confirmTitle'),
+        message: t('export.confirmMessage'),
+        onConfirm: async () => {
+          setExportingPdf(true);
+          try {
+            result = await createFinancialYearReportPdf({
+              financialYear: fy,
+              works,
             });
-            return;
+          } catch (error) {
+            generateFailed = true;
+            console.error('[ReportsScreen] export PDF failed:', error);
+          } finally {
+            setExportingPdf(false);
           }
+        },
+      });
 
-          showSuccess({
-            title: t('export.successTitle'),
-            message: t('export.successMessage'),
-          });
-        } catch (error) {
-          console.error('[ReportsScreen] export PDF failed:', error);
-          showError({
-            title: t('export.errorTitle'),
-            message: t('export.errorMessage'),
-          });
-        } finally {
-          setExportingPdf(false);
-        }
-      },
-    });
-  }, [exportingPdf, fy, works, pdfExportLabels, showConfirmation, showError, showInfo, showSuccess, t]);
+      if (!confirmed) return;
+
+      if (generateFailed) {
+        showError({
+          title: t('export.errorTitle'),
+          message: t('export.errorMessage'),
+        });
+        return;
+      }
+
+      if (result?.noData) {
+        showInfo({
+          title: t('export.noDataTitle'),
+          message: t('export.noDataMessage'),
+        });
+        return;
+      }
+
+      // iOS cannot present the share sheet over the confirmation <Modal>, so
+      // give its dismissal a frame to finish before opening the share sheet.
+      await new Promise((resolve) => setTimeout(resolve, 350));
+
+      try {
+        await shareReportPdf(result.filePath, {
+          shareTitle: pdfExportLabels.shareTitle,
+        });
+
+        showSuccess({
+          title: t('export.successTitle'),
+          message: t('export.successMessage'),
+        });
+      } catch (error) {
+        console.error('[ReportsScreen] export PDF failed:', error);
+        showError({
+          title: t('export.errorTitle'),
+          message: t('export.errorMessage'),
+        });
+      }
+    } finally {
+      exportInFlightRef.current = false;
+    }
+  }, [fy, works, pdfExportLabels, showConfirmation, showError, showInfo, showSuccess, t]);
 
   return (
     <>
