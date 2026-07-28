@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { MAX_SITE_PHOTOS } from '../db/repositories/workProgressRepository';
 import { getFileNameFromPath } from '../utils/fileName';
 import { showUploadAlert } from '../i18n/alertMessages';
+import { launchImageLibrarySafely } from '../utils/launchImageLibrary';
 
 const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'heic', 'heif']);
 
@@ -98,7 +99,7 @@ export const pickAndStoreSitePhoto = async (workId, currentCount = 0, options = 
       return null;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await launchImageLibrarySafely({
       mediaTypes: ['images'],
       allowsEditing: false,
       quality: 1,

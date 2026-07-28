@@ -269,8 +269,6 @@ const ContractorAssignmentScreen = ({ navigation }) => {
             label={t('steps.contractorAssignment.fields.percentRow')}
             helpKey="workflow.contractorAssignment.percentAboveBelow"
             helpTooltipId="contractorAssignment-percentAboveBelow"
-            labelStyle={styles.rowLabel}
-            style={styles.percentLabelRow}
           />
           <View style={styles.percentRow}>
             <View style={styles.directionCell}>
@@ -345,17 +343,6 @@ const styles = StyleSheet.create({
   cta: { marginTop: theme.Spacing?.lg ?? 24, marginBottom: theme.Spacing?.xl ?? 32 },
 
   // ── % above/below row ──────────────────────────────────────────────────────
-  percentLabelRow: {
-    marginBottom: theme.Spacing?.xs ?? 6,
-  },
-  rowLabel: {
-    fontSize: theme.FontSize?.sm ?? 14,
-    fontWeight: theme.FontWeight?.medium ?? '500',
-    fontFamily: theme.FontFamily?.regular ?? undefined,
-    color: theme.Colors?.textPrimary ?? '#1A1A1A',
-    marginBottom: 0,
-    letterSpacing: 0.1,
-  },
   percentRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

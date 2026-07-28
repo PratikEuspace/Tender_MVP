@@ -29,6 +29,7 @@ import {
 import { patchBillDocumentPath } from '../db/repositories/billSubmissionRepository';
 import { getFileNameFromPath } from '../utils/fileName';
 import { showUploadAlert, tError } from '../i18n/alertMessages';
+import { launchImageLibrarySafely } from '../utils/launchImageLibrary';
 import {
   UPLOAD_SOURCE,
   chooseUploadSource,
@@ -218,7 +219,7 @@ const pickFromPhotoLibrary = async () => {
       return null;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await launchImageLibrarySafely({
       mediaTypes: ['images'],
       allowsEditing: false,
       quality: 1,

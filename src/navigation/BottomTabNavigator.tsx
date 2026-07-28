@@ -20,9 +20,15 @@ const BottomTabNavigator = () => {
   const { t } = useTranslation('navigation');
   const insets = useSafeAreaInsets();
 
+  // Android draws edge-to-edge, so the bar must reserve room for the system
+  // navigation bar itself: a numeric `height` in tabBarStyle makes React
+  // Navigation skip its own inset handling, and this style is merged last so it
+  // also overrides the inset padding the tab bar would otherwise apply.
+  // 3-button navigation reports a ~48dp bottom inset, gesture navigation a small
+  // one, so the same expression covers both without a platform check.
   const androidTabBarStyle = {
-    height: 72,
-    paddingBottom: 10,
+    height: 72 + insets.bottom,
+    paddingBottom: 10 + insets.bottom,
     paddingTop: 8,
     backgroundColor: TAB_BAR_BG,
     borderTopWidth: 0,

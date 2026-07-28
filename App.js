@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import SubscriptionExpiryHandler from './src/components/auth/SubscriptionExpiryHandler';
 import { AppDialogProvider } from './src/context/AppDialogProvider';
+import { UploadSourceSheetProvider } from './src/context/UploadSourceSheetProvider';
 import { initDatabase } from './src/db/database';
 import { initI18n } from './src/i18n';
 import { configureIosEdgeToEdge } from './src/navigation/configureIosEdgeToEdge';
@@ -50,8 +51,10 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer ref={navigationRef}>
         <AppDialogProvider>
-          <RootNavigator />
-          <SubscriptionExpiryHandler />
+          <UploadSourceSheetProvider>
+            <RootNavigator />
+            <SubscriptionExpiryHandler />
+          </UploadSourceSheetProvider>
         </AppDialogProvider>
       </NavigationContainer>
     </GestureHandlerRootView>

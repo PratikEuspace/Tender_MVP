@@ -1,9 +1,12 @@
 /**
  * Upload source chooser — Photo Library vs Files / Documents.
  * Used by documentUploadService before opening a picker.
+ *
+ * iOS: native ActionSheetIOS (unchanged).
+ * Android: custom bottom sheet via UploadSourceSheetProvider.
  */
 
-import { ActionSheetIOS, Alert, Platform } from 'react-native';
+import { ActionSheetIOS, Platform } from 'react-native';
 
 import i18n from '../i18n';
 
@@ -14,17 +17,24 @@ export const UPLOAD_SOURCE = {
 
 const t = (key) => i18n.t(key, { ns: 'errors' });
 
+/** @type {null | (() => Promise<'photo_library'|'files'|null>)} */
+let showUploadSourceSheetImpl = null;
+
+export const registerUploadSourceSheet = (handler) => {
+  showUploadSourceSheetImpl = handler;
+};
+
 /**
  * @returns {Promise<'photo_library'|'files'|null>} null if cancelled
  */
-export const chooseUploadSource = () =>
-  new Promise((resolve) => {
-    const title = t('uploadSource.title');
-    const photo = t('uploadSource.photoLibrary');
-    const files = t('uploadSource.files');
-    const cancel = t('uploadSource.cancel');
+export const chooseUploadSource = () => {
+  if (Platform.OS === 'ios') {
+    return new Promise((resolve) => {
+      const title = t('uploadSource.title');
+      const photo = t('uploadSource.photoLibrary');
+      const files = t('uploadSource.files');
+      const cancel = t('uploadSource.cancel');
 
-    if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
           title,
@@ -37,12 +47,13 @@ export const chooseUploadSource = () =>
           else resolve(null);
         },
       );
-      return;
-    }
+    });
+  }
 
-    Alert.alert(title, undefined, [
-      { text: cancel, style: 'cancel', onPress: () => resolve(null) },
-      { text: photo, onPress: () => resolve(UPLOAD_SOURCE.PHOTO_LIBRARY) },
-      { text: files, onPress: () => resolve(UPLOAD_SOURCE.FILES) },
-    ]);
-  });
+  if (!showUploadSourceSheetImpl) {
+    console.warn('[uploadSourceSheet] UploadSourceSheetProvider is not mounted.');
+    return Promise.resolve(null);
+  }
+
+  return showUploadSourceSheetImpl();
+};

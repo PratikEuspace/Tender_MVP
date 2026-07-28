@@ -4,10 +4,10 @@
     "works": "Work",
     "addWork": "Add work",
     "reports": "Report",
-    "settings": "Setting"
+    "settings": "Settings"
   },
   "drawer": {
-    "title": "Setting",
+    "title": "Settings",
     "generalCorrespondence": "General Correspondence",
     "backup": "Backup",
     "restore": "Restore",
