@@ -253,7 +253,6 @@ const buildTenderSection = (tender, i18n) => {
       tr(i18n, 'export.pdfLabels.bPacketOpen'),
       displayBoolPdf(tender.b_packet_open, i18n, 'export.pdfLabels.yes', 'export.pdfLabels.no'),
     ],
-    [tw(i18n, 'steps.tenderCreation.sectionTenderStatus'), displayText(tender.status, i18n)],
   ]);
 };
 

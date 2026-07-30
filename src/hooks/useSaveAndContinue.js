@@ -22,7 +22,7 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
 
   const saveAndContinue = useCallback(
     async (formData, navigation, options = {}) => {
-      const { onValidationFail } = options;
+      const { onValidationFail, popToTop = false } = options;
 
       if (isSaving) return;
 
@@ -49,7 +49,14 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
 
         await refreshCurrentWork();
         clearDraft(screenKey, resolvedWorkId ?? undefined);
-        navigation.navigate(nextRoute);
+
+        // Final Bill Submission returns to the Add Work hub. Plain navigate()
+        // pushes a second AddWork (RN7 stack) so Android Back shows the hub twice.
+        if (popToTop) {
+          navigation.popToTop();
+        } else {
+          navigation.navigate(nextRoute);
+        }
       } catch (error) {
         console.error(`[useSaveAndContinue] ${screenKey} save failed:`, error);
         if (typeof onValidationFail === 'function') {

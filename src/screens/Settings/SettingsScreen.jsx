@@ -9,10 +9,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import LanguagePicker from '../../components/LanguagePicker';
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
+import { reportSectionLabelStyle } from '../../components/reports/reportTypography';
 import BackupProgressModal from '../../components/settings/BackupProgressModal';
 import FinancialYearBudgetSection from '../../components/settings/FinancialYearBudgetSection';
 import SettingsDrawer from '../../components/Settingsdrawer';
-import { reportSectionLabelStyle } from '../../components/reports/reportTypography';
 import { useAppDialog } from '../../context/AppDialogProvider';
 import {
     createBackupArchive,
