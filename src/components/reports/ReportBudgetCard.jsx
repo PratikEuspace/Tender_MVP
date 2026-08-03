@@ -104,6 +104,8 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     paddingRight: 10,
   },
   title: {
@@ -120,8 +122,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: PRIMARY,
-    lineHeight: 16,
+    lineHeight: 18,
     paddingTop: 2,
+    maxWidth: '45%',
+    flexShrink: 1,
+    minWidth: 0,
+    textAlign: 'right',
+    includeFontPadding: true,
   },
   legendRow: {
     flexDirection: 'row',
@@ -191,23 +198,29 @@ const styles = StyleSheet.create({
   },
   detailRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   detailLabel: {
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     fontSize: 13,
     fontWeight: '500',
     color: '#6B7280',
-    lineHeight: 18,
+    lineHeight: 20,
+    includeFontPadding: true,
   },
   detailValue: {
     fontSize: 13,
     fontWeight: '600',
     color: PRIMARY,
-    lineHeight: 18,
+    lineHeight: 20,
     textAlign: 'right',
     flexShrink: 1,
+    minWidth: 0,
     marginLeft: 12,
+    includeFontPadding: true,
   },
 });
 

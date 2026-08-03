@@ -6,11 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../theme';
 
-import DashboardScreen   from '../screens/Dashboard/DashboardScreen';
-import WorksScreen       from '../screens/Works/WorksScreen';
-import WorkflowNavigator from './WorkflowNavigator';   // ← replaces AddWorkScreen
-import ReportsScreen     from '../screens/Reports/ReportsScreen';
-import SettingsScreen    from '../screens/Settings/SettingsScreen';
+import DashboardScreen from '../screens/Dashboard/DashboardScreen';
+import ReportsScreen from '../screens/Reports/ReportsScreen';
+import SettingsScreen from '../screens/Settings/SettingsScreen';
+import WorksNavigator from './WorksNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -65,10 +64,11 @@ const BottomTabNavigator = () => {
           fontWeight: '500',
           marginBottom: 2,
         },
+        // Keep limited scaling: iOS Text defaults cap labels at 1.15 in App.js.
         tabBarAllowFontScaling: true,
         tabBarStyle:
           Platform.OS === 'ios' ? iosTabBarStyle : androidTabBarStyle,
-        tabBarIcon: ({ color, size, focused }) => {
+        tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'grid-outline';
           let iconSize = size;
 
@@ -76,9 +76,6 @@ const BottomTabNavigator = () => {
             iconName = 'grid-outline';
           } else if (route.name === 'Works') {
             iconName = 'briefcase-outline';
-          } else if (route.name === 'Add Work') {
-            iconName = 'add';
-            iconSize = 28;
           } else if (route.name === 'Reports') {
             iconName = 'clipboard-outline';
           } else if (route.name === 'Settings') {
@@ -96,13 +93,8 @@ const BottomTabNavigator = () => {
       />
       <Tab.Screen
         name="Works"
-        component={WorksScreen}
+        component={WorksNavigator}
         options={{ tabBarLabel: t('tabs.works') }}
-      />
-      <Tab.Screen
-        name="Add Work"
-        component={WorkflowNavigator}
-        options={{ tabBarLabel: t('tabs.addWork') }}
       />
       <Tab.Screen
         name="Reports"

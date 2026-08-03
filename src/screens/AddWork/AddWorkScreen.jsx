@@ -1,27 +1,22 @@
 // src/screens/AddWork/AddWorkScreen.jsx
 //
-// Entry point of the Tender Workflow System.
-// Lists all workflow steps as tappable NavigationCards.
+// Workflow hub — lists all steps as tappable NavigationCards.
+// Opened from Works (Start New Work / existing card); not a bottom tab.
 //
 // Card state from works.workflow_step (see deriveStepStatus):
 //   completed — step saved via Save & Continue (green check)
 //   pending   — current step, not yet advanced (yellow indicator)
 //   locked    — future steps (grey lock, not tappable)
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import ScreenLayout from '../../components/layouts/Screenlayout';
 import NavigationCard from '../../components/Navigationcard';
-import SettingsDrawer from '../../components/Settingsdrawer';
-import StartNewWorkFab, {
-  START_NEW_WORK_FAB_SCROLL_PADDING,
-} from '../../components/workflow/StartNewWorkFab';
 import WorkflowStepBadge from '../../components/workflow/WorkflowStepBadge';
 
 import useWorkStore from '../../store/useWorkStore';
-import useDraftStore from '../../store/useDraftStore';
 
 import {
   Colors,
@@ -39,10 +34,8 @@ import { getStepTitle } from '../../i18n/workflowLabels';
 
 const AddWorkScreen = ({ navigation }) => {
   const { t } = useTranslation('workflow');
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { currentWork, refreshCurrentWork, clearCurrentWork } = useWorkStore();
-  const clearAllDrafts = useDraftStore((state) => state.clearAllDrafts);
+  const { currentWork, refreshCurrentWork } = useWorkStore();
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -57,25 +50,35 @@ const AddWorkScreen = ({ navigation }) => {
       ? WORKFLOW_ALL_COMPLETE_STEP
       : workflowStep;
 
-  const handleStartNewWork = () => {
-    clearCurrentWork();
-    clearAllDrafts();
-  };
+  const hubTitle = useMemo(() => {
+    const name = String(currentWork?.work_name ?? '').trim();
+    return name || t('hub.untitledTitle');
+  }, [currentWork?.work_name, t]);
 
   const handleStepPress = (step, status) => {
     if (status === 'locked') return;
     navigation.navigate(step.route);
   };
 
+  const handleExitToWorks = () => {
+    const worksNavigation = navigation.getParent();
+    if (worksNavigation?.canGoBack()) {
+      worksNavigation.goBack();
+      return;
+    }
+
+    navigation.goBack();
+  };
+
   return (
     <View style={styles.screen}>
       <ScreenLayout
-        showMenu
+        showBack
         showNotification
         scrollable
-        onMenuPress={() => setDrawerOpen(true)}
+        onBackPress={handleExitToWorks}
         contentStyle={styles.scrollContent}
-        title={t('hub.title')}
+        title={hubTitle}
         headerTitleStyle={styles.heroTitle}
       >
         <View style={styles.cardList}>
@@ -97,13 +100,6 @@ const AddWorkScreen = ({ navigation }) => {
           })}
         </View>
       </ScreenLayout>
-
-      <StartNewWorkFab onPress={handleStartNewWork} />
-
-      <SettingsDrawer
-        visible={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-      />
     </View>
   );
 };
@@ -121,7 +117,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 0,
-    paddingBottom: START_NEW_WORK_FAB_SCROLL_PADDING,
+    paddingBottom: Spacing.xl ?? 24,
   },
   cardList: {
     marginTop: Spacing.md,

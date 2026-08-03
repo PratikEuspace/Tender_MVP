@@ -13,7 +13,7 @@ const FAB_RIGHT_OFFSET = Spacing.lg ?? 16;
 export const START_NEW_WORK_FAB_SCROLL_PADDING = 88;
 
 /**
- * Fixed primary action for Add Work hub — clears current work and drafts.
+ * Fixed primary action on Works list — starts a new work flow.
  */
 const StartNewWorkFab = ({ onPress, style }) => {
   const { t } = useTranslation('workflow');

@@ -239,11 +239,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...dashboardSectionLabelStyle,
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    lineHeight: 24,
+    marginRight: 12,
+    includeFontPadding: true,
   },
   viewAll: {
     fontSize: 13,
     fontWeight: '600',
     color: Colors.primary ?? PRIMARY,
+    flexShrink: 0,
   },
   emptyRecent: {
     fontSize: 14,

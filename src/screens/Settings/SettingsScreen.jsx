@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import LanguagePicker from '../../components/LanguagePicker';
 import ScreenLayout from '../../components/layouts/Screenlayout';
@@ -393,6 +393,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...reportSectionLabelStyle,
+    // iOS Devanagari fallback needs more leading at the app's capped Dynamic
+    // Type scale; keep the shared Report/Dashboard heading style unchanged.
+    ...Platform.select({
+      ios: { lineHeight: 24 },
+      default: {},
+    }),
     marginBottom: Spacing.sm,
   },
   sectionCards: {},

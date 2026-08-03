@@ -2,9 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import theme from '../../theme';
+import useWorkStore from '../../store/useWorkStore';
 
 const WorkflowProgress = ({
-  currentStep = 0,
   totalSteps = 1,
 
   title,
@@ -18,9 +18,14 @@ const WorkflowProgress = ({
   style,
   containerStyle,
 }) => {
-  // Clamp step to valid range
-  const safeStep = Math.min(Math.max(currentStep, 0), totalSteps);
   const safeTotalSteps = Math.max(totalSteps, 1);
+  const workflowStep = useWorkStore((state) => state.currentWork?.workflow_step);
+  // workflow_step identifies the next unlocked step, so saved completion is
+  // one less than it. A new work has no saved step yet and starts at zero.
+  const completedSteps = Number.isFinite(Number(workflowStep))
+    ? Number(workflowStep) - 1
+    : 0;
+  const safeStep = Math.min(Math.max(completedSteps, 0), safeTotalSteps);
   const { t } = useTranslation('workflow');
   const ratio = safeStep / safeTotalSteps;
   const percentage = Math.round(ratio * 100);

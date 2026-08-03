@@ -137,12 +137,17 @@ const styles = StyleSheet.create({
     minWidth: 140,
     ...Platform.select({
       ios: {
+        // The popup is wider than the trigger, so keep its right edge inside
+        // the header gutter without changing its width.
+        transform: [{ translateX: -12 }],
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.12,
         shadowRadius: 6,
       },
-      android: { elevation: 8 },
+      // Android's modal layout does not consistently apply the transform
+      // offset here; a layout margin shifts the measured popup reliably.
+      android: { elevation: 8, marginLeft: -19 },
       default: {},
     }),
   },

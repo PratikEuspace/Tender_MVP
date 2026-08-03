@@ -1,7 +1,7 @@
 {
   "title": "कामांची यादी",
   "emptyTitle": "अद्याप कोणतेही काम नाही.",
-  "emptyHint": "सुरू करण्यासाठी 'काम जोडा' टॅबमधून नवीन काम जोडा.",
+  "emptyHint": "सुरू करण्यासाठी 'नवीन काम सुरू करा' वर टॅप करा.",
   "openWorkAccessibility": "काम उघडा {{name}}",
   "deleteButton": "हटवा",
   "deleteAccessibility": "काम हटवा {{name}}",

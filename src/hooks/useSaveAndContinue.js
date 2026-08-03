@@ -7,12 +7,14 @@
 //   nextRoute    — where to go after save
 //   currentRoute — THIS screen's route (used to mark completed step id)
 
+import { CommonActions } from '@react-navigation/native';
 import { useCallback } from 'react';
 import useWorkStore from '../store/useWorkStore';
 import useDraftStore from '../store/useDraftStore';
 import useUIStore from '../store/useUIStore';
 import { advanceWorkflowStep } from '../db/repositories/worksRepository';
 import { getStepByRoute } from '../constants/WorkflowSteps';
+import { WORKS_ROUTES } from '../navigation/worksRoutes';
 import { translatePersistError } from '../i18n/persistErrors';
 
 const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
@@ -22,7 +24,11 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
 
   const saveAndContinue = useCallback(
     async (formData, navigation, options = {}) => {
-      const { onValidationFail, popToTop = false } = options;
+      const {
+        onValidationFail,
+        popToTop = false,
+        exitToWorksList = false,
+      } = options;
 
       if (isSaving) return;
 
@@ -50,9 +56,21 @@ const useSaveAndContinue = (screenKey, persistFn, nextRoute, currentRoute) => {
         await refreshCurrentWork();
         clearDraft(screenKey, resolvedWorkId ?? undefined);
 
-        // Final Bill Submission returns to the Add Work hub. Plain navigate()
-        // pushes a second AddWork (RN7 stack) so Android Back shows the hub twice.
-        if (popToTop) {
+        // Bill Submission leaves the nested Workflow stack and lands on Works list.
+        if (exitToWorksList) {
+          const parent = navigation.getParent();
+          if (parent) {
+            parent.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: WORKS_ROUTES.LIST }],
+              }),
+            );
+          } else {
+            navigation.popToTop();
+          }
+        } else if (popToTop) {
+          // Collapse nested stack to hub (no duplicate AddWork push).
           navigation.popToTop();
         } else {
           navigation.navigate(nextRoute);

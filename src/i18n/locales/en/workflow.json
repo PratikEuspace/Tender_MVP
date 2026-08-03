@@ -1,6 +1,7 @@
 {
   "hub": {
     "title": "Add Work",
+    "untitledTitle": "Work",
     "startNewWork": "Start new work",
     "startNewWorkAccessibility": "Start new work"
   },

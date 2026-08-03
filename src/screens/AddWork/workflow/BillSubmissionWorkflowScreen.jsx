@@ -133,8 +133,8 @@ const BillSubmissionWorkflowScreen = ({ navigation }) => {
   const handleSubmit = () => {
     saveAndContinue(form, navigation, {
       onValidationFail: showWorkflowValidationFail,
-      // Collapse the workflow stack to the single Add Work hub (no duplicate).
-      popToTop: true,
+      // Leave Workflow stack and return to Works list (cards refresh on focus).
+      exitToWorksList: true,
     });
   };
 

@@ -1,5 +1,5 @@
 // src/screens/Works/WorksScreen.jsx
-// Works list — load from SQLite, tap to resume on Add Work hub, swipe left to delete.
+// Works list — load from SQLite, Start New Work / tap card opens workflow hub.
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,8 +25,15 @@ import ScreenLayout from '../../components/layouts/Screenlayout';
 import SettingsDrawer from '../../components/Settingsdrawer';
 import StatusChip, { workCompletedToChipStatus } from '../../components/Statuschip';
 import StatusChipGroup from '../../components/Statuschipgroup';
+import StartNewWorkFab, {
+  START_NEW_WORK_FAB_SCROLL_PADDING,
+} from '../../components/workflow/StartNewWorkFab';
 import { WORKFLOW_ROUTES } from '../../constants/WorkflowSteps';
 import { useAppDialog } from '../../context/AppDialogProvider';
+import {
+  openWorkflowHubParams,
+  WORKS_ROUTES,
+} from '../../navigation/worksRoutes';
 import { deleteWorkPermanently } from '../../services/workDeleteService';
 import useDraftStore from '../../store/useDraftStore';
 import useUIStore from '../../store/useUIStore';
@@ -251,9 +258,15 @@ const WorkListCard = ({ work, onPress, pressLocked = false, isOpen = false, onRe
 
 const WorksScreen = ({ navigation }) => {
   const { t, i18n } = useTranslation(['works', 'common']);
-  const { works, currentWorkId, refreshWorks, setCurrentWorkId, clearCurrentWork } =
-    useWorkStore();
+  const {
+    works,
+    currentWorkId,
+    refreshWorks,
+    setCurrentWorkId,
+    clearCurrentWork,
+  } = useWorkStore();
   const clearDraftsForWork = useDraftStore((state) => state.clearDraftsForWork);
+  const clearAllDrafts = useDraftStore((state) => state.clearAllDrafts);
   const isSaving = useUIStore((state) => state.isSaving);
   const { showConfirmation, showError, showWarning } = useAppDialog();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -275,14 +288,25 @@ const WorksScreen = ({ navigation }) => {
     );
   }, [works, statusFilter]);
 
+  const openWorkflowHub = useCallback(() => {
+    navigation.navigate(
+      WORKS_ROUTES.WORKFLOW,
+      openWorkflowHubParams(WORKFLOW_ROUTES.ADD_WORK),
+    );
+  }, [navigation]);
+
+  const handleStartNewWork = useCallback(() => {
+    clearCurrentWork();
+    clearAllDrafts();
+    openWorkflowHub();
+  }, [clearAllDrafts, clearCurrentWork, openWorkflowHub]);
+
   const handleOpenWork = useCallback(
-    (work) => {
-      setCurrentWorkId(work.id);
-      navigation.navigate('Add Work', {
-        screen: WORKFLOW_ROUTES.ADD_WORK,
-      });
+    async (work) => {
+      await setCurrentWorkId(work.id);
+      openWorkflowHub();
     },
-    [navigation, setCurrentWorkId],
+    [openWorkflowHub, setCurrentWorkId],
   );
 
   const registerClose = useCallback((workId, closeFn) => {
@@ -437,6 +461,8 @@ const WorksScreen = ({ navigation }) => {
         />
       </ScreenLayout>
 
+      <StartNewWorkFab onPress={handleStartNewWork} />
+
       <AppToast
         visible={Boolean(toastMessage)}
         message={toastMessage}
@@ -507,7 +533,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: theme.Spacing?.xl ?? 24,
+    paddingBottom: START_NEW_WORK_FAB_SCROLL_PADDING,
     flexGrow: 1,
   },
   listHeader: {
