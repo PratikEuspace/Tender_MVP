@@ -3,7 +3,6 @@
     "name": "Ward Vikas",
     "slug": "Tender_Mvp",
     "version": "1.0.2",
-    "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tendermvp",
     "userInterfaceStyle": "automatic",
